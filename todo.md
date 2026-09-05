@@ -48,13 +48,13 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ### 2.1. Enum / trạng thái
 
-- [ ] `MessageStatus`
+- [x] `MessageStatus`
   - `LOCKED` — chưa đến thời điểm mở
   - `AVAILABLE` — đã đến thời điểm mở, chưa được người nhận mở
   - `OPENED` — người nhận đã mở
   - `CANCELLED` — người gửi hủy trước khi mở (nếu cho phép)
-- [ ] `RecipientType`: `SELF` | `OTHER`
-- [ ] `NotificationStatus`: `PENDING` | `SENT` | `FAILED`
+- [x] `RecipientType`: `SELF` | `OTHER`
+- [x] `NotificationStatus`: `PENDING` | `SENT` | `FAILED`
 
 ### 2.2. Bảng & entity
 
@@ -81,7 +81,9 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
   - `messages(recipient_email)`
   - `messages(sender_id, created_at)`
   - `messages(recipient_user_id, status)`
-- [ ] Java entity / enum mapping (bước **Entity** — chưa làm)
+- [x] Java entity / enum mapping (bước **Entity**)
+  - `User`, `Message`, `RefreshToken`
+  - `UserRepository`, `MessageRepository`, `RefreshTokenRepository`
 
 ### 2.3. Flyway migrations
 
@@ -197,7 +199,7 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 ## Thứ tự triển khai (đã chốt)
 
 1. ~~Database~~  
-2. Entity  
+2. ~~Entity~~  
 3. Auth  
 4. Message  
 5. Business Rule  
