@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:future_message;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: false
+  mail:
+    host: localhost
+    port: 3025

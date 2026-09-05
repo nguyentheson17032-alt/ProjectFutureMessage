@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: future-message-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-future_message}
+      POSTGRES_USER: ${POSTGRES_USER:-future}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-future}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-future} -d ${POSTGRES_DB:-future_message}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: future-message-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
