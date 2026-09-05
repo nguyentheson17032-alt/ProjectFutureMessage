@@ -58,9 +58,9 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ### 2.2. Bảng & entity
 
-- [ ] `users`
+- [x] `users`
   - id, email (unique), password_hash, display_name, email_verified, created_at, updated_at
-- [ ] `messages`
+- [x] `messages`
   - id
   - sender_id (FK users)
   - recipient_email (normalized lowercase)
@@ -75,19 +75,20 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
   - notified_at (nullable)
   - created_at, updated_at
   - version (optimistic lock)
-- [ ] `refresh_tokens` (hoặc equivalent) cho JWT refresh
-- [ ] Index bắt buộc:
+- [x] `refresh_tokens` (hoặc equivalent) cho JWT refresh
+- [x] Index bắt buộc:
   - `messages(status, unlock_at)` — job unlock
   - `messages(recipient_email)`
   - `messages(sender_id, created_at)`
   - `messages(recipient_user_id, status)`
+- [ ] Java entity / enum mapping (bước **Entity** — chưa làm)
 
 ### 2.3. Flyway migrations
 
-- [ ] `V1__init_users.sql`
-- [ ] `V2__init_messages.sql`
-- [ ] `V3__init_refresh_tokens.sql`
-- [ ] (nếu cần) `V4__indexes_and_constraints.sql`
+- [x] `V1__init_users.sql`
+- [x] `V2__init_messages.sql`
+- [x] `V3__init_refresh_tokens.sql`
+- [x] `V4__indexes_and_constraints.sql`
 
 ### 2.4. Quy tắc nghiệp vụ (invariant)
 
@@ -193,13 +194,16 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ---
 
-## Thứ tự triển khai đề xuất
+## Thứ tự triển khai (đã chốt)
 
-1. Skeleton project + Docker Postgres + Flyway + entities  
-2. Auth JWT  
-3. Message CRUD + rule ẩn content / không sửa sau khi mở  
-4. Scheduler unlock + email  
-5. Tests + Swagger + README  
+1. ~~Database~~  
+2. Entity  
+3. Auth  
+4. Message  
+5. Business Rule  
+6. Scheduler  
+7. Email  
+8. Test  
 
 ---
 
