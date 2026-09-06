@@ -77,6 +77,8 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 | `MAIL_USERNAME` | trống | SMTP user (prod) |
 | `MAIL_PASSWORD` | trống | SMTP password (prod) |
 | `MAIL_FROM` | `noreply@futuremessage.local` | Địa chỉ gửi |
+| `JWT_SECRET` | secret local (dev only) | HMAC key cho access token; **tối thiểu 32 bytes**. Prod bắt buộc set. |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Origin frontend được phép |
 
 ## Flow nghiệp vụ
 
@@ -88,17 +90,27 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 
 ## API overview
 
-Các endpoint dưới đây là kế hoạch. Phần auth và message API sẽ được implement ở các bước tiếp theo.
+Auth đã implement. Message API vẫn là bước tiếp theo.
 
 ### Auth
 
-| Method | Path | Mô tả |
-| --- | --- | --- |
-| `POST` | `/api/v1/auth/register` | Đăng ký |
-| `POST` | `/api/v1/auth/login` | Đăng nhập, nhận JWT |
-| `POST` | `/api/v1/auth/refresh` | Làm mới access token |
-| `POST` | `/api/v1/auth/logout` | Đăng xuất |
-| `GET` | `/api/v1/users/me` | Thông tin user hiện tại |
+| Method | Path | Auth | Mô tả |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/auth/register` | public | Đăng ký, trả access + refresh token |
+| `POST` | `/api/v1/auth/login` | public | Đăng nhập, trả access + refresh token |
+| `POST` | `/api/v1/auth/refresh` | public (body: refresh token) | Xoay refresh token, cấp access token mới |
+| `POST` | `/api/v1/auth/logout` | public (body: refresh token) | Xóa refresh token |
+| `GET` | `/api/v1/users/me` | Bearer access token | Thông tin user hiện tại |
+
+Ví dụ:
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/auth/register ^
+  -H "Content-Type: application/json" ^
+  -d "{\"email\":\"ada@example.com\",\"password\":\"password1\",\"displayName\":\"Ada\"}"
+```
+
+Access token gửi header `Authorization: Bearer <token>`. Refresh token chỉ gửi qua body, không lưu raw trong database (chỉ lưu SHA-256 hash).
 
 ### Messages
 

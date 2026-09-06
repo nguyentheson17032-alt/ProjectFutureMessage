@@ -7,9 +7,20 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
   flyway:
     enabled: false
   mail:
     host: localhost
     port: 3025
+
+app:
+  jwt:
+    secret: test-jwt-secret-key-32-bytes-min!!
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+  cors:
+    allowed-origins: http://localhost:3000
+  auth:
+    rate-limit-requests: 1000
+    rate-limit-window: 1m

@@ -101,24 +101,24 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 - [ ] `opened_at` chỉ set một lần, không overwrite.
 - [ ] Người gửi không đọc được content của message gửi cho người khác khi vẫn `LOCKED`?  
   Quyết định: **người gửi được xem message mình tạo** (kể cả LOCKED), người nhận chỉ xem content khi `AVAILABLE`/`OPENED`.
-- [ ] Khi user đăng ký bằng email đã từng được ghi là recipient → backfill `recipient_user_id`.
+- [x] Khi user đăng ký bằng email đã từng được ghi là recipient → backfill `recipient_user_id`.
 
 ---
 
 ## 3. Security & Auth
 
-- [ ] Spring Security stateless + JWT access token + refresh token.
-- [ ] Password: BCrypt.
-- [ ] API:
+- [x] Spring Security stateless + JWT access token + refresh token.
+- [x] Password: BCrypt.
+- [x] API:
   - `POST /api/v1/auth/register`
   - `POST /api/v1/auth/login`
   - `POST /api/v1/auth/refresh`
   - `POST /api/v1/auth/logout`
   - `GET  /api/v1/users/me`
-- [ ] Validation email/password/displayName.
-- [ ] CORS cho frontend sau này.
-- [ ] Rate limit cơ bản cho login/register (optional nhưng nên có).
-- [ ] Không lộ stacktrace; chuẩn hóa error response.
+- [x] Validation email/password/displayName.
+- [x] CORS cho frontend sau này.
+- [x] Rate limit cơ bản cho login/register (optional nhưng nên có).
+- [x] Không lộ stacktrace; chuẩn hóa error response.
 
 ---
 
@@ -162,8 +162,8 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ## 6. Exception, logging, observability
 
-- [ ] `BusinessException` + error codes (`MESSAGE_LOCKED`, `MESSAGE_NOT_EDITABLE`, `NOT_RECIPIENT`, `UNLOCK_NOT_REACHED`, ...)
-- [ ] `@RestControllerAdvice` — 400/401/403/404/409/422
+- [x] `BusinessException` + error codes (auth codes xong; message codes như `MESSAGE_LOCKED`, `NOT_RECIPIENT`, ... sẽ bổ sung ở bước Message)
+- [x] `@RestControllerAdvice` — 400/401/403/404/409; không lộ stacktrace
 - [ ] Request logging (không log content message đầy đủ ở prod)
 - [ ] Actuator health + info (không expose secrets)
 
@@ -200,7 +200,7 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 1. ~~Database~~  
 2. ~~Entity~~  
-3. Auth  
+3. ~~Auth~~  
 4. Message  
 5. Business Rule  
 6. Scheduler  
