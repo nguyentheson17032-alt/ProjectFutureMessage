@@ -88,6 +88,22 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 4. Người nhận gọi API mở message. Hệ thống lưu `openedAt` và chuyển sang `OPENED`.
 5. Sau khi `AVAILABLE` / `OPENED`, nội dung không được sửa.
 
+## Business rules (domain)
+
+Rule nằm ở `MessageRules` (ai được làm gì) và command methods trên `Message` (chuyển trạng thái). Service chỉ orchestration.
+
+| Rule | Chỗ enforce |
+| --- | --- |
+| `unlockAt` phải ở tương lai khi tạo / đổi hạn | `MessageRules.requireFutureUnlockAt`, `Message.compose` / `applyEdit` |
+| Chỉ sửa / hủy khi `LOCKED` | `Message.applyEdit`, `Message.cancel` |
+| Chỉ người gửi được sửa / hủy | `MessageRules.requireSender` |
+| Chỉ người nhận được mở | `MessageRules.requireRecipient` |
+| Mở chỉ khi `AVAILABLE`; đã `OPENED` thì idempotent | `Message.open` |
+| `openedAt` ghi một lần, không overwrite | `Message.setOpenedAt` |
+| Người gửi luôn thấy content; người nhận chỉ thấy khi `AVAILABLE`/`OPENED` | `MessageRules.visibleContent` |
+| Đăng ký bằng email đã là recipient → gắn `recipient_user_id` | `Message.claimRecipient` + `AuthService.register` (bulk update) |
+| `LOCKED` → `AVAILABLE` khi `unlockAt <= now` | `Message.markAvailable` (scheduler bước sau sẽ gọi) |
+
 ## API overview
 
 Auth và Message API đã implement. Mọi endpoint Message đều cần Bearer access token.
@@ -142,7 +158,7 @@ curl -s -X POST http://localhost:8080/api/v1/messages ^
 ```
 com.futuremessage
 ├── config      # timezone, Jackson, scheduler, ...
-├── domain      # entity, enum, value object
+├── domain      # entity, enum, MessageRules
 ├── repository
 ├── service
 ├── scheduler   # job unlock + gửi mail

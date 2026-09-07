@@ -94,6 +94,11 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ### 2.4. Quy tắc nghiệp vụ (invariant)
 
+Nằm ở domain, không nằm ở controller:
+
+- `MessageRules` — ai được sửa/mở/xem, `unlockAt` phải ở tương lai, ẩn content theo role + status.
+- `Message` command methods — `compose` / `applyEdit` / `cancel` / `open` / `markAvailable` / `claimRecipient`; `openedAt` không overwrite.
+
 - [x] `unlock_at` phải ở tương lai tại thời điểm tạo.
 - [x] Nội dung không được sửa khi `status ∈ {AVAILABLE, OPENED}`.
 - [x] Chỉ cho phép sửa khi `LOCKED` (title/content/`unlock_at` nếu vẫn còn tương lai).
@@ -171,10 +176,11 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ## 7. Testing
 
-- [ ] Unit test domain/service:
+- [x] Unit test domain/service:
   - [x] không sửa sau AVAILABLE/OPENED
   - [x] open chỉ khi AVAILABLE
   - [x] openedAt set 1 lần
+  - [x] domain: compose / edit / cancel / open / markAvailable / claimRecipient / ẩn content
   - [ ] unlock job chuyển đúng trạng thái
 - [ ] Integration test (Testcontainers PostgreSQL):
   - register/login
@@ -202,7 +208,7 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 2. ~~Entity~~  
 3. ~~Auth~~  
 4. ~~Message~~  
-5. Business Rule  
+5. ~~Business Rule~~  
 6. Scheduler  
 7. Email  
 8. Test  

@@ -1,6 +1,7 @@
 package com.futuremessage.web;
 
 import com.futuremessage.domain.Message;
+import com.futuremessage.domain.MessageRules;
 import com.futuremessage.domain.User;
 import com.futuremessage.web.dto.MessageResponse;
 import com.futuremessage.web.dto.MessageSummaryResponse;
@@ -46,17 +47,8 @@ public final class MessageMapper {
         );
     }
 
-    /**
-     * Người gửi luôn xem được nội dung (kể cả khi LOCKED).
-     * Người nhận chỉ xem được khi AVAILABLE hoặc OPENED.
-     */
+    /** Ẩn/hiện content theo {@link MessageRules#visibleContent}. */
     public static String visibleContent(Message message, User viewer) {
-        if (message.isSentBy(viewer)) {
-            return message.getContent();
-        }
-        if (message.isAddressedTo(viewer) && message.isContentVisibleToRecipient()) {
-            return message.getContent();
-        }
-        return null;
+        return MessageRules.visibleContent(message, viewer);
     }
 }

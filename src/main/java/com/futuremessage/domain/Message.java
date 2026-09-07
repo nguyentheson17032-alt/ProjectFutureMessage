@@ -1,5 +1,7 @@
 package com.futuremessage.domain;
 
+import com.futuremessage.common.BusinessException;
+import com.futuremessage.common.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -92,6 +94,46 @@ public class Message {
         this.recipientEmail = User.normalizeEmail(recipientEmail);
     }
 
+    /**
+     * {@code openedAt} chỉ ghi một lần. Lần mở sau (idempotent) không được đè timestamp cũ.
+     */
+    public void setOpenedAt(Instant openedAt) {
+        if (this.openedAt != null) {
+            return;
+        }
+        this.openedAt = openedAt;
+    }
+
+    /**
+     * Tạo message mới: luôn {@code LOCKED}, {@code unlockAt} phải ở tương lai.
+     */
+    public static Message compose(
+            User sender,
+            String title,
+            String content,
+            Instant unlockAt,
+            String recipientEmail,
+            User existingRecipient,
+            Instant now
+    ) {
+        Instant futureUnlockAt = MessageRules.requireFutureUnlockAt(unlockAt, now);
+        String email = MessageRules.resolveRecipientEmail(sender, recipientEmail);
+        User linkedRecipient = existingRecipient != null && existingRecipient.hasEmail(email)
+                ? existingRecipient
+                : null;
+        return Message.builder()
+                .sender(sender)
+                .recipientEmail(email)
+                .recipientUser(linkedRecipient)
+                .recipientType(MessageRules.recipientType(sender, email))
+                .title(title == null ? null : title.trim())
+                .content(content == null ? null : content.trim())
+                .unlockAt(futureUnlockAt)
+                .status(MessageStatus.LOCKED)
+                .notificationStatus(NotificationStatus.PENDING)
+                .build();
+    }
+
     public boolean canEdit() {
         return status == MessageStatus.LOCKED;
     }
@@ -106,6 +148,86 @@ public class Message {
 
     public boolean isContentVisibleToRecipient() {
         return status == MessageStatus.AVAILABLE || status == MessageStatus.OPENED;
+    }
+
+    /**
+     * Chỉ sửa title/content/unlockAt khi còn {@code LOCKED}. {@code unlockAt} mới vẫn phải ở tương lai.
+     */
+    public void applyEdit(String newTitle, String newContent, Instant newUnlockAt, Instant now) {
+        if (!canEdit()) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_EDITABLE);
+        }
+        if (newTitle != null) {
+            String trimmed = newTitle.trim();
+            if (trimmed.isEmpty()) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "title must not be blank");
+            }
+            this.title = trimmed;
+        }
+        if (newContent != null) {
+            String trimmed = newContent.trim();
+            if (trimmed.isEmpty()) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "content must not be blank");
+            }
+            this.content = trimmed;
+        }
+        if (newUnlockAt != null) {
+            this.unlockAt = MessageRules.requireFutureUnlockAt(newUnlockAt, now);
+        }
+    }
+
+    public void cancel() {
+        if (!canCancel()) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_EDITABLE);
+        }
+        this.status = MessageStatus.CANCELLED;
+    }
+
+    /**
+     * Người nhận mở lần đầu: {@code AVAILABLE → OPENED} và ghi {@code openedAt}.
+     * Đã {@code OPENED} thì no-op (idempotent, không đè {@code openedAt}).
+     */
+    public void open(Instant now) {
+        if (status == MessageStatus.OPENED) {
+            return;
+        }
+        if (status == MessageStatus.LOCKED) {
+            throw new BusinessException(ErrorCode.MESSAGE_LOCKED);
+        }
+        if (!canOpen()) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_AVAILABLE);
+        }
+        this.status = MessageStatus.OPENED;
+        setOpenedAt(now);
+    }
+
+    /**
+     * Scheduler gọi khi {@code unlockAt <= now}: {@code LOCKED → AVAILABLE}.
+     * Đã {@code AVAILABLE} thì no-op để job retry an toàn.
+     */
+    public void markAvailable(Instant now) {
+        if (status == MessageStatus.AVAILABLE) {
+            return;
+        }
+        if (status != MessageStatus.LOCKED) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_AVAILABLE);
+        }
+        if (now == null || now.isBefore(unlockAt)) {
+            throw new BusinessException(ErrorCode.MESSAGE_LOCKED);
+        }
+        this.status = MessageStatus.AVAILABLE;
+    }
+
+    /**
+     * Khi user đăng ký bằng email đã từng là recipient: gắn {@code recipientUser} nếu chưa có.
+     * Không ghi đè nếu message đã thuộc user khác.
+     */
+    public boolean claimRecipient(User user) {
+        if (user == null || recipientUser != null || !user.hasEmail(recipientEmail)) {
+            return false;
+        }
+        this.recipientUser = user;
+        return true;
     }
 
     public boolean isSentBy(User user) {

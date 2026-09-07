@@ -233,6 +233,35 @@ class MessageServiceTest {
     }
 
     @Test
+    void updateRejectsUnlockAtInThePast() {
+        Message message = lockedOtherMessage();
+        when(userRepository.findById(sender.getId())).thenReturn(Optional.of(sender));
+        when(messageRepository.findDetailedById(message.getId())).thenReturn(Optional.of(message));
+
+        assertThatThrownBy(() -> messageService.update(
+                sender.getId(),
+                message.getId(),
+                new UpdateMessageRequest(null, null, NOW.minusSeconds(1))
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.UNLOCK_AT_MUST_BE_FUTURE);
+    }
+
+    @Test
+    void openRejectsCancelledMessage() {
+        Message message = lockedOtherMessage();
+        message.setStatus(MessageStatus.CANCELLED);
+        when(userRepository.findById(recipient.getId())).thenReturn(Optional.of(recipient));
+        when(messageRepository.findDetailedById(message.getId())).thenReturn(Optional.of(message));
+
+        assertThatThrownBy(() -> messageService.open(recipient.getId(), message.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.MESSAGE_NOT_AVAILABLE);
+    }
+
+    @Test
     void senderOfOtherMessageCannotOpen() {
         Message message = lockedOtherMessage();
         message.setStatus(MessageStatus.AVAILABLE);

@@ -78,6 +78,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
+        // Bulk tương đương Message.claimRecipient: gắn recipient_user_id khi email vừa đăng ký.
         messageRepository.linkUnclaimedMessagesToUser(user, email);
         return issueTokens(user);
     }

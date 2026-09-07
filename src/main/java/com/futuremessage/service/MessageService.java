@@ -4,9 +4,7 @@ import com.futuremessage.common.BusinessException;
 import com.futuremessage.common.ErrorCode;
 import com.futuremessage.common.PageResponse;
 import com.futuremessage.domain.Message;
-import com.futuremessage.domain.MessageStatus;
-import com.futuremessage.domain.NotificationStatus;
-import com.futuremessage.domain.RecipientType;
+import com.futuremessage.domain.MessageRules;
 import com.futuremessage.domain.User;
 import com.futuremessage.repository.MessageRepository;
 import com.futuremessage.repository.UserRepository;
@@ -21,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
@@ -43,23 +40,18 @@ public class MessageService {
     @Transactional
     public MessageResponse create(UUID senderId, CreateMessageRequest request) {
         User sender = requireUser(senderId);
-        Instant unlockAt = requireFutureUnlockAt(request.unlockAt());
-
-        String recipientEmail = resolveRecipientEmail(sender, request.recipientEmail());
-        RecipientType recipientType = sender.hasEmail(recipientEmail) ? RecipientType.SELF : RecipientType.OTHER;
+        String recipientEmail = MessageRules.resolveRecipientEmail(sender, request.recipientEmail());
         User recipientUser = userRepository.findByEmail(recipientEmail).orElse(null);
 
-        Message message = Message.builder()
-                .sender(sender)
-                .recipientEmail(recipientEmail)
-                .recipientUser(recipientUser)
-                .recipientType(recipientType)
-                .title(request.title().trim())
-                .content(request.content().trim())
-                .unlockAt(unlockAt)
-                .status(MessageStatus.LOCKED)
-                .notificationStatus(NotificationStatus.PENDING)
-                .build();
+        Message message = Message.compose(
+                sender,
+                request.title(),
+                request.content(),
+                request.unlockAt(),
+                recipientEmail,
+                recipientUser,
+                clock.instant()
+        );
 
         return MessageMapper.toResponse(messageRepository.save(message), sender);
     }
@@ -97,14 +89,8 @@ public class MessageService {
     public MessageResponse update(UUID senderId, UUID messageId, UpdateMessageRequest request) {
         User sender = requireUser(senderId);
         Message message = requireVisibleMessage(messageId, sender);
-        if (!message.isSentBy(sender)) {
-            throw new BusinessException(ErrorCode.NOT_SENDER);
-        }
-        if (!message.canEdit()) {
-            throw new BusinessException(ErrorCode.MESSAGE_NOT_EDITABLE);
-        }
-
-        applyUpdate(message, request);
+        MessageRules.requireSender(message, sender);
+        message.applyEdit(request.title(), request.content(), request.unlockAt(), clock.instant());
         return MessageMapper.toResponse(message, sender);
     }
 
@@ -112,84 +98,29 @@ public class MessageService {
     public void cancel(UUID senderId, UUID messageId) {
         User sender = requireUser(senderId);
         Message message = requireVisibleMessage(messageId, sender);
-        if (!message.isSentBy(sender)) {
-            throw new BusinessException(ErrorCode.NOT_SENDER);
-        }
-        if (!message.canCancel()) {
-            throw new BusinessException(ErrorCode.MESSAGE_NOT_EDITABLE);
-        }
-        message.setStatus(MessageStatus.CANCELLED);
+        MessageRules.requireSender(message, sender);
+        message.cancel();
     }
 
     @Transactional
     public MessageResponse open(UUID recipientId, UUID messageId) {
         User recipient = requireUser(recipientId);
         Message message = requireVisibleMessage(messageId, recipient);
-        if (!message.isAddressedTo(recipient)) {
-            throw new BusinessException(ErrorCode.NOT_RECIPIENT);
-        }
-        if (message.getStatus() == MessageStatus.OPENED) {
-            return MessageMapper.toResponse(message, recipient);
-        }
-        if (message.getStatus() == MessageStatus.LOCKED) {
-            throw new BusinessException(ErrorCode.MESSAGE_LOCKED);
-        }
-        if (!message.canOpen()) {
-            throw new BusinessException(ErrorCode.MESSAGE_NOT_AVAILABLE);
-        }
-
-        Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
-        message.setStatus(MessageStatus.OPENED);
-        message.setOpenedAt(now);
+        MessageRules.requireRecipient(message, recipient);
+        message.open(clock.instant().truncatedTo(ChronoUnit.MICROS));
         return MessageMapper.toResponse(message, recipient);
-    }
-
-    private void applyUpdate(Message message, UpdateMessageRequest request) {
-        if (request.title() != null) {
-            String title = request.title().trim();
-            if (title.isEmpty()) {
-                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "title must not be blank");
-            }
-            message.setTitle(title);
-        }
-        if (request.content() != null) {
-            String content = request.content().trim();
-            if (content.isEmpty()) {
-                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "content must not be blank");
-            }
-            message.setContent(content);
-        }
-        if (request.unlockAt() != null) {
-            message.setUnlockAt(requireFutureUnlockAt(request.unlockAt()));
-        }
     }
 
     private Message requireVisibleMessage(UUID messageId, User viewer) {
         Message message = messageRepository.findDetailedById(messageId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MESSAGE_NOT_FOUND));
-        if (!message.isSentBy(viewer) && !message.isAddressedTo(viewer)) {
-            throw new BusinessException(ErrorCode.MESSAGE_NOT_FOUND);
-        }
+        MessageRules.requireParticipant(message, viewer);
         return message;
     }
 
     private User requireUser(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
-    }
-
-    private Instant requireFutureUnlockAt(Instant unlockAt) {
-        if (unlockAt == null || !unlockAt.isAfter(clock.instant())) {
-            throw new BusinessException(ErrorCode.UNLOCK_AT_MUST_BE_FUTURE);
-        }
-        return unlockAt;
-    }
-
-    private static String resolveRecipientEmail(User sender, String recipientEmail) {
-        if (recipientEmail == null || recipientEmail.isBlank()) {
-            return sender.getEmail();
-        }
-        return User.normalizeEmail(recipientEmail);
     }
 
     private static PageRequest pageRequest(int page, int size, Sort sort) {
