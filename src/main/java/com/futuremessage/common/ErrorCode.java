@@ -13,6 +13,14 @@ public enum ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Authentication required"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "Access denied"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not found"),
+    MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "Message not found"),
+    MESSAGE_LOCKED(HttpStatus.FORBIDDEN, "Message is still locked"),
+    MESSAGE_NOT_EDITABLE(HttpStatus.CONFLICT, "Message can only be changed while locked"),
+    MESSAGE_NOT_AVAILABLE(HttpStatus.CONFLICT, "Message is not available to open"),
+    NOT_SENDER(HttpStatus.FORBIDDEN, "Only the sender can perform this action"),
+    NOT_RECIPIENT(HttpStatus.FORBIDDEN, "Only the recipient can open this message"),
+    UNLOCK_AT_MUST_BE_FUTURE(HttpStatus.BAD_REQUEST, "unlockAt must be in the future"),
+    CONCURRENT_MODIFICATION(HttpStatus.CONFLICT, "The resource was modified by another request"),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
 

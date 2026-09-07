@@ -90,7 +90,7 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 
 ## API overview
 
-Auth đã implement. Message API vẫn là bước tiếp theo.
+Auth và Message API đã implement. Mọi endpoint Message đều cần Bearer access token.
 
 ### Auth
 
@@ -114,15 +114,28 @@ Access token gửi header `Authorization: Bearer <token>`. Refresh token chỉ g
 
 ### Messages
 
+Mọi endpoint dưới đây cần header `Authorization: Bearer <accessToken>`.
+
 | Method | Path | Mô tả |
 | --- | --- | --- |
-| `POST` | `/api/v1/messages` | Tạo message |
-| `GET` | `/api/v1/messages/sent` | Danh sách đã gửi |
-| `GET` | `/api/v1/messages/inbox` | Hộp thư đến (ẩn content khi `LOCKED`) |
-| `GET` | `/api/v1/messages/{id}` | Chi tiết (ẩn content theo rule) |
-| `PATCH` | `/api/v1/messages/{id}` | Sửa khi còn `LOCKED` |
-| `DELETE` | `/api/v1/messages/{id}` | Hủy khi còn `LOCKED` |
-| `POST` | `/api/v1/messages/{id}/open` | Người nhận mở message |
+| `POST` | `/api/v1/messages` | Tạo message (`title`, `content`, `unlockAt`; `recipientEmail` optional — bỏ trống = gửi cho chính mình) |
+| `GET` | `/api/v1/messages/sent` | Danh sách đã gửi (sender luôn thấy `content`) |
+| `GET` | `/api/v1/messages/inbox` | Hộp thư đến. `LOCKED`: không trả `content`. `AVAILABLE`/`OPENED`: trả `content`. Không gồm `CANCELLED`. |
+| `GET` | `/api/v1/messages/{id}` | Chi tiết. Người lạ → 404. Người nhận chỉ thấy `content` khi `AVAILABLE`/`OPENED`. |
+| `PATCH` | `/api/v1/messages/{id}` | Sửa `title`/`content`/`unlockAt` khi còn `LOCKED` và là sender |
+| `DELETE` | `/api/v1/messages/{id}` | Hủy khi còn `LOCKED` và là sender → `CANCELLED` (soft delete) |
+| `POST` | `/api/v1/messages/{id}/open` | Người nhận mở khi `AVAILABLE`. Idempotent nếu đã `OPENED`. |
+
+Query `sent` / `inbox`: `page` (mặc định 0), `size` (mặc định 20, tối đa 100).
+
+Ví dụ tạo message cho chính mình:
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/messages ^
+  -H "Authorization: Bearer ACCESS_TOKEN" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"title\":\"To future me\",\"content\":\"Keep going\",\"unlockAt\":\"2030-01-01T00:00:00+07:00\"}"
+```
 
 ## Cấu trúc package
 

@@ -94,12 +94,12 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ### 2.4. Quy tắc nghiệp vụ (invariant)
 
-- [ ] `unlock_at` phải ở tương lai tại thời điểm tạo.
-- [ ] Nội dung không được sửa khi `status ∈ {AVAILABLE, OPENED}`.
-- [ ] Chỉ cho phép sửa khi `LOCKED` (title/content/`unlock_at` nếu vẫn còn tương lai).
-- [ ] Chỉ người nhận (email khớp user đang đăng nhập) mới được **mở** message.
-- [ ] `opened_at` chỉ set một lần, không overwrite.
-- [ ] Người gửi không đọc được content của message gửi cho người khác khi vẫn `LOCKED`?  
+- [x] `unlock_at` phải ở tương lai tại thời điểm tạo.
+- [x] Nội dung không được sửa khi `status ∈ {AVAILABLE, OPENED}`.
+- [x] Chỉ cho phép sửa khi `LOCKED` (title/content/`unlock_at` nếu vẫn còn tương lai).
+- [x] Chỉ người nhận (email khớp user đang đăng nhập) mới được **mở** message.
+- [x] `opened_at` chỉ set một lần, không overwrite.
+- [x] Người gửi không đọc được content của message gửi cho người khác khi vẫn `LOCKED`?  
   Quyết định: **người gửi được xem message mình tạo** (kể cả LOCKED), người nhận chỉ xem content khi `AVAILABLE`/`OPENED`.
 - [x] Khi user đăng ký bằng email đã từng được ghi là recipient → backfill `recipient_user_id`.
 
@@ -124,25 +124,25 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ## 4. Message API
 
-- [ ] `POST   /api/v1/messages` — tạo message
+- [x] `POST   /api/v1/messages` — tạo message
   - body: title, content, unlockAt, recipientEmail (nếu omitted/self → email của chính user)
-- [ ] `GET    /api/v1/messages/sent` — danh sách đã gửi (sender)
-- [ ] `GET    /api/v1/messages/inbox` — danh sách nhận được
+- [x] `GET    /api/v1/messages/sent` — danh sách đã gửi (sender)
+- [x] `GET    /api/v1/messages/inbox` — danh sách nhận được
   - inbox LOCKED: trả metadata, **không trả content**
   - inbox AVAILABLE/OPENED: trả content
-- [ ] `GET    /api/v1/messages/{id}` — chi tiết (áp dụng rule ẩn content)
-- [ ] `PATCH  /api/v1/messages/{id}` — sửa khi còn LOCKED và là sender
-- [ ] `DELETE /api/v1/messages/{id}` — hủy khi còn LOCKED và là sender → `CANCELLED`
-- [ ] `POST   /api/v1/messages/{id}/open` — người nhận mở
+- [x] `GET    /api/v1/messages/{id}` — chi tiết (áp dụng rule ẩn content)
+- [x] `PATCH  /api/v1/messages/{id}` — sửa khi còn LOCKED và là sender
+- [x] `DELETE /api/v1/messages/{id}` — hủy khi còn LOCKED và là sender → `CANCELLED`
+- [x] `POST   /api/v1/messages/{id}/open` — người nhận mở
   - chỉ khi status = AVAILABLE
   - set OPENED + openedAt
   - idempotent: nếu đã OPENED thì trả về message, không đổi openedAt
 
 ### 4.1. DTO / validation
 
-- [ ] CreateMessageRequest, UpdateMessageRequest, MessageResponse, MessageSummaryResponse
-- [ ] Bean Validation: title length, content not blank, unlockAt future, email format
-- [ ] Mapper entity ↔ DTO, ẩn content theo role + status
+- [x] CreateMessageRequest, UpdateMessageRequest, MessageResponse, MessageSummaryResponse
+- [x] Bean Validation: title length, content not blank, unlockAt future, email format
+- [x] Mapper entity ↔ DTO, ẩn content theo role + status
 
 ---
 
@@ -162,7 +162,7 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 
 ## 6. Exception, logging, observability
 
-- [x] `BusinessException` + error codes (auth codes xong; message codes như `MESSAGE_LOCKED`, `NOT_RECIPIENT`, ... sẽ bổ sung ở bước Message)
+- [x] `BusinessException` + error codes (auth + message: `MESSAGE_LOCKED`, `NOT_RECIPIENT`, `MESSAGE_NOT_EDITABLE`, ...)
 - [x] `@RestControllerAdvice` — 400/401/403/404/409; không lộ stacktrace
 - [ ] Request logging (không log content message đầy đủ ở prod)
 - [ ] Actuator health + info (không expose secrets)
@@ -172,10 +172,10 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 ## 7. Testing
 
 - [ ] Unit test domain/service:
-  - không sửa sau AVAILABLE/OPENED
-  - open chỉ khi AVAILABLE
-  - openedAt set 1 lần
-  - unlock job chuyển đúng trạng thái
+  - [x] không sửa sau AVAILABLE/OPENED
+  - [x] open chỉ khi AVAILABLE
+  - [x] openedAt set 1 lần
+  - [ ] unlock job chuyển đúng trạng thái
 - [ ] Integration test (Testcontainers PostgreSQL):
   - register/login
   - create message self/other
@@ -201,7 +201,7 @@ Mục tiêu: website cho phép người dùng viết tin nhắn gửi cho chính
 1. ~~Database~~  
 2. ~~Entity~~  
 3. ~~Auth~~  
-4. Message  
+4. ~~Message~~  
 5. Business Rule  
 6. Scheduler  
 7. Email  

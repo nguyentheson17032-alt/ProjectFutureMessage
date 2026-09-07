@@ -6,6 +6,7 @@ import com.futuremessage.common.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
@@ -54,6 +56,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<ApiErrorResponse> handleUnreadable(HttpServletRequest request) {
         return respond(ErrorCode.VALIDATION_ERROR, "Malformed JSON request", request.getRequestURI(), List.of());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request
+    ) {
+        String field = ex.getName();
+        return respond(
+                ErrorCode.VALIDATION_ERROR,
+                "Invalid value for " + field,
+                request.getRequestURI(),
+                List.of(new ApiErrorResponse.FieldErrorDetail(field, "Invalid format"))
+        );
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    ResponseEntity<ApiErrorResponse> handleOptimisticLock(HttpServletRequest request) {
+        return respond(
+                ErrorCode.CONCURRENT_MODIFICATION,
+                ErrorCode.CONCURRENT_MODIFICATION.defaultMessage(),
+                request.getRequestURI(),
+                List.of()
+        );
     }
 
     @ExceptionHandler(AuthenticationException.class)
