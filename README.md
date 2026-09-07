@@ -79,12 +79,15 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 | `MAIL_FROM` | `noreply@futuremessage.local` | Địa chỉ gửi |
 | `JWT_SECRET` | secret local (dev only) | HMAC key cho access token; **tối thiểu 32 bytes**. Prod bắt buộc set. |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Origin frontend được phép |
+| `APP_SCHEDULER_UNLOCK_ENABLED` | `true` | Tắt job unlock (test profile đặt `false`) |
+| `APP_SCHEDULER_UNLOCK_INTERVAL` | `30s` | Fixed delay giữa hai lần chạy job unlock |
+| `APP_SCHEDULER_UNLOCK_BATCH_SIZE` | `50` | Số message khóa tối đa mỗi lần chạy |
 
 ## Flow nghiệp vụ
 
 1. User tạo message cho chính mình hoặc email người khác, kèm `unlockAt` ở tương lai.
 2. Message ở trạng thái `LOCKED`. Người nhận chưa thấy nội dung.
-3. Khi đến `unlockAt`, scheduler chuyển sang `AVAILABLE` và gửi email cho người nhận.
+3. Khi đến `unlockAt`, scheduler (mỗi 30 giây) khóa hàng `LOCKED` đến hạn bằng `FOR UPDATE SKIP LOCKED`, gọi `Message.markAvailable`, chuyển sang `AVAILABLE`. Email notification là bước sau (`notificationStatus` vẫn `PENDING`).
 4. Người nhận gọi API mở message. Hệ thống lưu `openedAt` và chuyển sang `OPENED`.
 5. Sau khi `AVAILABLE` / `OPENED`, nội dung không được sửa.
 
@@ -102,7 +105,7 @@ Rule nằm ở `MessageRules` (ai được làm gì) và command methods trên `
 | `openedAt` ghi một lần, không overwrite | `Message.setOpenedAt` |
 | Người gửi luôn thấy content; người nhận chỉ thấy khi `AVAILABLE`/`OPENED` | `MessageRules.visibleContent` |
 | Đăng ký bằng email đã là recipient → gắn `recipient_user_id` | `Message.claimRecipient` + `AuthService.register` (bulk update) |
-| `LOCKED` → `AVAILABLE` khi `unlockAt <= now` | `Message.markAvailable` (scheduler bước sau sẽ gọi) |
+| `LOCKED` → `AVAILABLE` khi `unlockAt <= now` | `Message.markAvailable` — `UnlockScheduler` → `UnlockService` |
 
 ## API overview
 
@@ -153,6 +156,18 @@ curl -s -X POST http://localhost:8080/api/v1/messages ^
   -d "{\"title\":\"To future me\",\"content\":\"Keep going\",\"unlockAt\":\"2030-01-01T00:00:00+07:00\"}"
 ```
 
+## Scheduler (unlock)
+
+Job chạy trên 1 thread (`fm-scheduler-`), fixed delay 30s (dev/prod). Profile test tắt job (`app.scheduler.unlock.enabled=false`) vì H2 không dùng `FOR UPDATE SKIP LOCKED` như PostgreSQL.
+
+Mỗi lần chạy:
+
+1. `SELECT id FROM messages WHERE status = 'LOCKED' AND unlock_at <= now ORDER BY unlock_at LIMIT batchSize FOR UPDATE SKIP LOCKED`
+2. Load entity, gọi `Message.markAvailable(now)` → `AVAILABLE`
+3. `notificationStatus` giữ `PENDING` để bước Email gửi (không gửi lại nếu đã `SENT`)
+
+Nhiều instance app: `SKIP LOCKED` bỏ qua hàng instance khác đang giữ. Cùng instance: pool size 1 nên job không chồng.
+
 ## Cấu trúc package
 
 ```
@@ -161,7 +176,7 @@ com.futuremessage
 ├── domain      # entity, enum, MessageRules
 ├── repository
 ├── service
-├── scheduler   # job unlock + gửi mail
+├── scheduler   # UnlockScheduler — trigger job unlock
 ├── web         # controller, dto, mapper
 ├── security    # JWT, filter, current user
 ├── mail

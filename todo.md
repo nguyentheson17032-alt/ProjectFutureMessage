@@ -153,9 +153,9 @@ Nằm ở domain, không nằm ở controller:
 
 ## 5. Unlock scheduler & email
 
-- [ ] Job định kỳ (mỗi 30–60 giây): tìm `LOCKED` có `unlock_at <= now()`
-- [ ] Batch update → `AVAILABLE` + enqueue/send notification
-- [ ] Xử lý concurrency: `SELECT ... FOR UPDATE SKIP LOCKED` hoặc equivalent
+- [x] Job định kỳ (mỗi 30–60 giây): tìm `LOCKED` có `unlock_at <= now()`
+- [x] Batch update → `AVAILABLE` + enqueue/send notification
+- [x] Xử lý concurrency: `SELECT ... FOR UPDATE SKIP LOCKED` hoặc equivalent
 - [ ] Email service (Spring Mail)
   - template: subject + body (plain + HTML đơn giản)
   - nội dung: người gửi, title, thời điểm mở, link/hướng dẫn mở inbox
@@ -181,14 +181,14 @@ Nằm ở domain, không nằm ở controller:
   - [x] open chỉ khi AVAILABLE
   - [x] openedAt set 1 lần
   - [x] domain: compose / edit / cancel / open / markAvailable / claimRecipient / ẩn content
-  - [ ] unlock job chuyển đúng trạng thái
+  - [x] unlock job chuyển đúng trạng thái
 - [ ] Integration test (Testcontainers PostgreSQL):
   - register/login
   - create message self/other
   - inbox ẩn content khi LOCKED
   - open flow + openedAt
   - email gửi khi unlock (mock mail sender)
-- [ ] Scheduler test với clock cố định (`Clock` bean để inject thời gian)
+- [x] Scheduler test với clock cố định (`Clock` bean để inject thời gian)
 
 ---
 
@@ -209,7 +209,7 @@ Nằm ở domain, không nằm ở controller:
 3. ~~Auth~~  
 4. ~~Message~~  
 5. ~~Business Rule~~  
-6. Scheduler  
+6. ~~Scheduler~~  
 7. Email  
 8. Test  
 

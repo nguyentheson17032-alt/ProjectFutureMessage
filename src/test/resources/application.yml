@@ -15,6 +15,11 @@ spring:
     port: 3025
 
 app:
+  scheduler:
+    unlock:
+      enabled: false
+      interval: 30s
+      batch-size: 50
   jwt:
     secret: test-jwt-secret-key-32-bytes-min!!
     access-token-ttl: 15m

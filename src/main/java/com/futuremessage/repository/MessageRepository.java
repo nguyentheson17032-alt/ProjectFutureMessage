@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,4 +35,20 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     @Modifying(clearAutomatically = true)
     @Query("update Message m set m.recipientUser = :user where m.recipientEmail = :email and m.recipientUser is null")
     int linkUnclaimedMessagesToUser(@Param("user") User user, @Param("email") String email);
+
+    /**
+     * Lấy id các message {@code LOCKED} đã đến {@code unlock_at}, khóa hàng đến hết transaction.
+     * {@code SKIP LOCKED}: instance / transaction khác đang xử lý hàng đó thì bỏ qua, không chờ.
+     * Dùng index {@code idx_messages_status_unlock_at}. Phải gọi trong {@code @Transactional}.
+     */
+    @Query(value = """
+            SELECT id
+            FROM messages
+            WHERE status = 'LOCKED'
+              AND unlock_at <= :now
+            ORDER BY unlock_at ASC
+            LIMIT :batchSize
+            FOR UPDATE SKIP LOCKED
+            """, nativeQuery = true)
+    List<UUID> lockDueLockedMessageIds(@Param("now") Instant now, @Param("batchSize") int batchSize);
 }

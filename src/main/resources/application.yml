@@ -41,6 +41,11 @@ server:
 
 app:
   timezone: Asia/Ho_Chi_Minh
+  scheduler:
+    unlock:
+      enabled: true
+      interval: 30s
+      batch-size: 50
   mail:
     from: ${MAIL_FROM:noreply@futuremessage.local}
   jwt:
@@ -58,3 +63,5 @@ logging:
     org.flywaydb: INFO
     org.hibernate.SQL: DEBUG
     org.springframework.mail: INFO
+    com.futuremessage.scheduler: INFO
+    com.futuremessage.service.UnlockService: INFO

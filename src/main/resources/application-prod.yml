@@ -24,6 +24,11 @@ server:
     include-binding-errors: never
 
 app:
+  scheduler:
+    unlock:
+      enabled: true
+      interval: 30s
+      batch-size: 50
   jwt:
     secret: ${JWT_SECRET}
   cors:
