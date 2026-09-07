@@ -178,6 +178,55 @@ class MessageTest {
     }
 
     @Test
+    void canNotifyOnlyWhenUnlockedAndNotYetSent() {
+        Message locked = lockedOtherMessage();
+        assertThat(locked.canNotify()).isFalse();
+
+        locked.markAvailable(FUTURE);
+        assertThat(locked.canNotify()).isTrue();
+
+        locked.markNotificationSent(FUTURE);
+        assertThat(locked.canNotify()).isFalse();
+        assertThat(locked.getNotificationStatus()).isEqualTo(NotificationStatus.SENT);
+        assertThat(locked.getNotifiedAt()).isEqualTo(FUTURE);
+    }
+
+    @Test
+    void markNotificationSentIsIdempotentAndDoesNotOverwriteNotifiedAt() {
+        Message message = lockedOtherMessage();
+        message.markAvailable(FUTURE);
+        message.markNotificationSent(FUTURE);
+
+        message.markNotificationSent(FUTURE.plusSeconds(60));
+        assertThat(message.getNotifiedAt()).isEqualTo(FUTURE);
+        assertThat(message.getNotificationStatus()).isEqualTo(NotificationStatus.SENT);
+    }
+
+    @Test
+    void markNotificationFailedDoesNotDowngradeSent() {
+        Message failed = lockedOtherMessage();
+        failed.markAvailable(FUTURE);
+        failed.markNotificationFailed();
+        assertThat(failed.getNotificationStatus()).isEqualTo(NotificationStatus.FAILED);
+        assertThat(failed.canNotify()).isTrue();
+
+        Message sent = lockedOtherMessage();
+        sent.markAvailable(FUTURE);
+        sent.markNotificationSent(FUTURE);
+        sent.markNotificationFailed();
+        assertThat(sent.getNotificationStatus()).isEqualTo(NotificationStatus.SENT);
+    }
+
+    @Test
+    void markNotificationSentRejectedWhileLocked() {
+        Message locked = lockedOtherMessage();
+        assertThatThrownBy(() -> locked.markNotificationSent(FUTURE))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.MESSAGE_NOT_AVAILABLE);
+    }
+
+    @Test
     void claimRecipientOnlyWhenUnclaimedAndEmailMatches() {
         Message unclaimed = Message.builder()
                 .sender(sender)

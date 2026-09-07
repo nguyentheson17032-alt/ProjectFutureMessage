@@ -31,6 +31,9 @@ spring:
           auth: false
           starttls:
             enable: false
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
 
 server:
   port: ${SERVER_PORT:8080}
@@ -46,8 +49,13 @@ app:
       enabled: true
       interval: 30s
       batch-size: 50
+    notification:
+      enabled: true
+      interval: 30s
+      batch-size: 50
   mail:
     from: ${MAIL_FROM:noreply@futuremessage.local}
+    inbox-url: ${MAIL_INBOX_URL:http://localhost:3000/inbox}
   jwt:
     secret: ${JWT_SECRET:local-dev-only-change-me-32bytes-min-key!}
     access-token-ttl: 15m
@@ -65,3 +73,5 @@ logging:
     org.springframework.mail: INFO
     com.futuremessage.scheduler: INFO
     com.futuremessage.service.UnlockService: INFO
+    com.futuremessage.service.NotificationService: INFO
+    com.futuremessage.mail: INFO

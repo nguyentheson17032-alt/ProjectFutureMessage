@@ -77,19 +77,24 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 | `MAIL_USERNAME` | trống | SMTP user (prod) |
 | `MAIL_PASSWORD` | trống | SMTP password (prod) |
 | `MAIL_FROM` | `noreply@futuremessage.local` | Địa chỉ gửi |
+| `MAIL_INBOX_URL` | `http://localhost:3000/inbox` | Link inbox trong email thông báo |
 | `JWT_SECRET` | secret local (dev only) | HMAC key cho access token; **tối thiểu 32 bytes**. Prod bắt buộc set. |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Origin frontend được phép |
 | `APP_SCHEDULER_UNLOCK_ENABLED` | `true` | Tắt job unlock (test profile đặt `false`) |
 | `APP_SCHEDULER_UNLOCK_INTERVAL` | `30s` | Fixed delay giữa hai lần chạy job unlock |
 | `APP_SCHEDULER_UNLOCK_BATCH_SIZE` | `50` | Số message khóa tối đa mỗi lần chạy |
+| `APP_SCHEDULER_NOTIFICATION_ENABLED` | `true` | Tắt job email (test profile đặt `false`) |
+| `APP_SCHEDULER_NOTIFICATION_INTERVAL` | `30s` | Fixed delay giữa hai lần chạy job email |
+| `APP_SCHEDULER_NOTIFICATION_BATCH_SIZE` | `50` | Số email tối đa mỗi lần chạy |
 
 ## Flow nghiệp vụ
 
 1. User tạo message cho chính mình hoặc email người khác, kèm `unlockAt` ở tương lai.
 2. Message ở trạng thái `LOCKED`. Người nhận chưa thấy nội dung.
-3. Khi đến `unlockAt`, scheduler (mỗi 30 giây) khóa hàng `LOCKED` đến hạn bằng `FOR UPDATE SKIP LOCKED`, gọi `Message.markAvailable`, chuyển sang `AVAILABLE`. Email notification là bước sau (`notificationStatus` vẫn `PENDING`).
-4. Người nhận gọi API mở message. Hệ thống lưu `openedAt` và chuyển sang `OPENED`.
-5. Sau khi `AVAILABLE` / `OPENED`, nội dung không được sửa.
+3. Khi đến `unlockAt`, scheduler unlock (mỗi 30 giây) khóa hàng `LOCKED` đến hạn bằng `FOR UPDATE SKIP LOCKED`, gọi `Message.markAvailable`, chuyển sang `AVAILABLE`.
+4. Scheduler email (mỗi 30 giây) gửi thông báo cho `recipientEmail`. Thành công → `notificationStatus = SENT`. SMTP fail → `FAILED`, lần sau retry. Đã `SENT` thì không gửi lại.
+5. Người nhận gọi API mở message. Hệ thống lưu `openedAt` và chuyển sang `OPENED`.
+6. Sau khi `AVAILABLE` / `OPENED`, nội dung không được sửa.
 
 ## Business rules (domain)
 
@@ -106,6 +111,7 @@ Rule nằm ở `MessageRules` (ai được làm gì) và command methods trên `
 | Người gửi luôn thấy content; người nhận chỉ thấy khi `AVAILABLE`/`OPENED` | `MessageRules.visibleContent` |
 | Đăng ký bằng email đã là recipient → gắn `recipient_user_id` | `Message.claimRecipient` + `AuthService.register` (bulk update) |
 | `LOCKED` → `AVAILABLE` khi `unlockAt <= now` | `Message.markAvailable` — `UnlockScheduler` → `UnlockService` |
+| Email unlock: PENDING/FAILED → SENT; không gửi lại SENT | `Message.markNotificationSent` / `markNotificationFailed` — `NotificationScheduler` → `NotificationService` |
 
 ## API overview
 
@@ -164,9 +170,21 @@ Mỗi lần chạy:
 
 1. `SELECT id FROM messages WHERE status = 'LOCKED' AND unlock_at <= now ORDER BY unlock_at LIMIT batchSize FOR UPDATE SKIP LOCKED`
 2. Load entity, gọi `Message.markAvailable(now)` → `AVAILABLE`
-3. `notificationStatus` giữ `PENDING` để bước Email gửi (không gửi lại nếu đã `SENT`)
+3. `notificationStatus` giữ `PENDING` để job email gửi (không gửi lại nếu đã `SENT`)
 
-Nhiều instance app: `SKIP LOCKED` bỏ qua hàng instance khác đang giữ. Cùng instance: pool size 1 nên job không chồng.
+Nhiều instance app: `SKIP LOCKED` bỏ qua hàng instance khác đang giữ. Cùng instance: pool size 1 nên job unlock và job email không chồng.
+
+## Email (unlock notification)
+
+Job chạy trên cùng thread pool (`fm-scheduler-`), fixed delay 30s (dev/prod). Profile test tắt job (`app.scheduler.notification.enabled=false`).
+
+Mỗi lần chạy:
+
+1. `SELECT id FROM messages WHERE status IN ('AVAILABLE', 'OPENED') AND notification_status IN ('PENDING', 'FAILED') ORDER BY unlock_at LIMIT batchSize FOR UPDATE SKIP LOCKED`
+2. Compose email (subject + plain + HTML): người gửi, title, thời điểm mở, link inbox. **Không** nhúng `content` của message.
+3. Gửi SMTP. Thành công → `Message.markNotificationSent(now)` (`SENT` + `notifiedAt`). Fail → `Message.markNotificationFailed()` (`FAILED`, lần sau retry).
+
+Local: Mailpit SMTP `localhost:1025`, UI [http://localhost:8025](http://localhost:8025). Prod: `MAIL_HOST` / `MAIL_PORT` / `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` / `MAIL_INBOX_URL`.
 
 ## Cấu trúc package
 

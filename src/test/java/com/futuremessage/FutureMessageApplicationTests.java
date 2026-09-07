@@ -1,6 +1,7 @@
 package com.futuremessage;
 
 import com.futuremessage.config.TimezoneConfig;
+import com.futuremessage.scheduler.NotificationScheduler;
 import com.futuremessage.scheduler.UnlockScheduler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,5 +35,10 @@ class FutureMessageApplicationTests {
     @Test
     void unlockSchedulerIsDisabledInTests() {
         assertThat(applicationContext.getBeanNamesForType(UnlockScheduler.class)).isEmpty();
+    }
+
+    @Test
+    void notificationSchedulerIsDisabledInTests() {
+        assertThat(applicationContext.getBeanNamesForType(NotificationScheduler.class)).isEmpty();
     }
 }

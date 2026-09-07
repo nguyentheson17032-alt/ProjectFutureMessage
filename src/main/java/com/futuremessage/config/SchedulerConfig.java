@@ -12,12 +12,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 /**
  * Bật Spring Scheduling và cấp {@link TaskScheduler} 1 thread.
  * <p>
- * Pool size = 1 để job unlock không chạy chồng lên chính nó trên cùng một instance.
+ * Pool size = 1 để job unlock và job email không chạy chồng lên nhau trên cùng một instance.
  * Nhiều instance app vẫn an toàn nhờ {@code SELECT ... FOR UPDATE SKIP LOCKED} ở repository.
  */
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties(UnlockSchedulerProperties.class)
+@EnableConfigurationProperties({UnlockSchedulerProperties.class, NotificationSchedulerProperties.class})
 public class SchedulerConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulerConfig.class);

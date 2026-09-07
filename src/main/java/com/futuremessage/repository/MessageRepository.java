@@ -51,4 +51,23 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
             FOR UPDATE SKIP LOCKED
             """, nativeQuery = true)
     List<UUID> lockDueLockedMessageIds(@Param("now") Instant now, @Param("batchSize") int batchSize);
+
+    /**
+     * Message đã mở khóa, email còn {@code PENDING} hoặc {@code FAILED} (retry).
+     * Không lấy {@code SENT} — không gửi lại. {@code SKIP LOCKED} tránh hai instance gửi trùng.
+     */
+    @Query(value = """
+            SELECT id
+            FROM messages
+            WHERE status IN ('AVAILABLE', 'OPENED')
+              AND notification_status IN ('PENDING', 'FAILED')
+            ORDER BY unlock_at ASC
+            LIMIT :batchSize
+            FOR UPDATE SKIP LOCKED
+            """, nativeQuery = true)
+    List<UUID> lockPendingNotificationMessageIds(@Param("batchSize") int batchSize);
+
+    @EntityGraph(attributePaths = {"sender"})
+    @Query("select m from Message m where m.id in :ids")
+    List<Message> findDetailedByIdIn(@Param("ids") List<UUID> ids);
 }

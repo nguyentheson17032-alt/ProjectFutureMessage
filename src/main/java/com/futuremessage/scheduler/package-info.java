@@ -1,6 +1,8 @@
 /**
- * Scheduled jobs. {@link com.futuremessage.scheduler.UnlockScheduler} chỉ là trigger;
- * chuyển trạng thái nằm ở {@link com.futuremessage.service.UnlockService}
- * và {@link com.futuremessage.domain.Message#markAvailable(java.time.Instant)}.
+ * Scheduled jobs.
+ * {@link com.futuremessage.scheduler.UnlockScheduler} → {@link com.futuremessage.service.UnlockService}
+ * (LOCKED → AVAILABLE).
+ * {@link com.futuremessage.scheduler.NotificationScheduler} → {@link com.futuremessage.service.NotificationService}
+ * (gửi email, retry FAILED, bỏ qua SENT).
  */
 package com.futuremessage.scheduler;

@@ -20,6 +20,13 @@ app:
       enabled: false
       interval: 30s
       batch-size: 50
+    notification:
+      enabled: false
+      interval: 30s
+      batch-size: 50
+  mail:
+    from: noreply@futuremessage.test
+    inbox-url: http://localhost:3000/inbox
   jwt:
     secret: test-jwt-secret-key-32-bytes-min!!
     access-token-ttl: 15m

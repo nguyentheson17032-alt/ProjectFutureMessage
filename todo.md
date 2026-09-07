@@ -156,12 +156,12 @@ Nằm ở domain, không nằm ở controller:
 - [x] Job định kỳ (mỗi 30–60 giây): tìm `LOCKED` có `unlock_at <= now()`
 - [x] Batch update → `AVAILABLE` + enqueue/send notification
 - [x] Xử lý concurrency: `SELECT ... FOR UPDATE SKIP LOCKED` hoặc equivalent
-- [ ] Email service (Spring Mail)
+- [x] Email service (Spring Mail)
   - template: subject + body (plain + HTML đơn giản)
   - nội dung: người gửi, title, thời điểm mở, link/hướng dẫn mở inbox
-- [ ] Retry email khi fail (notification_status = FAILED, job retry)
-- [ ] Không gửi lại nếu đã SENT
-- [ ] Local: MailHog/Mailpit; Prod: SMTP env (host, port, user, pass, from)
+- [x] Retry email khi fail (notification_status = FAILED, job retry)
+- [x] Không gửi lại nếu đã SENT
+- [x] Local: MailHog/Mailpit; Prod: SMTP env (host, port, user, pass, from)
 
 ---
 
@@ -182,6 +182,7 @@ Nằm ở domain, không nằm ở controller:
   - [x] openedAt set 1 lần
   - [x] domain: compose / edit / cancel / open / markAvailable / claimRecipient / ẩn content
   - [x] unlock job chuyển đúng trạng thái
+  - [x] email: SENT / FAILED retry / không gửi lại SENT / template không lộ content
 - [ ] Integration test (Testcontainers PostgreSQL):
   - register/login
   - create message self/other
@@ -210,7 +211,7 @@ Nằm ở domain, không nằm ở controller:
 4. ~~Message~~  
 5. ~~Business Rule~~  
 6. ~~Scheduler~~  
-7. Email  
+7. ~~Email~~  
 8. Test  
 
 ---

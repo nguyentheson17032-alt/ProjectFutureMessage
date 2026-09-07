@@ -219,6 +219,42 @@ public class Message {
     }
 
     /**
+     * Chỉ gửi email khi message đã mở khóa ({@code AVAILABLE} / {@code OPENED})
+     * và chưa từng gửi thành công ({@code SENT} không gửi lại).
+     */
+    public boolean canNotify() {
+        return (status == MessageStatus.AVAILABLE || status == MessageStatus.OPENED)
+                && notificationStatus != NotificationStatus.SENT;
+    }
+
+    /**
+     * Đánh dấu đã gửi email thành công. Đã {@code SENT} thì no-op (không đè {@code notifiedAt}).
+     */
+    public void markNotificationSent(Instant now) {
+        if (notificationStatus == NotificationStatus.SENT) {
+            return;
+        }
+        if (status != MessageStatus.AVAILABLE && status != MessageStatus.OPENED) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_AVAILABLE);
+        }
+        if (now == null) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "notifiedAt requires a timestamp");
+        }
+        this.notificationStatus = NotificationStatus.SENT;
+        this.notifiedAt = now;
+    }
+
+    /**
+     * SMTP fail → {@code FAILED} để job lần sau retry. Không bao giờ hạ {@code SENT} xuống {@code FAILED}.
+     */
+    public void markNotificationFailed() {
+        if (notificationStatus == NotificationStatus.SENT) {
+            return;
+        }
+        this.notificationStatus = NotificationStatus.FAILED;
+    }
+
+    /**
      * Khi user đăng ký bằng email đã từng là recipient: gắn {@code recipientUser} nếu chưa có.
      * Không ghi đè nếu message đã thuộc user khác.
      */
