@@ -183,12 +183,12 @@ Nằm ở domain, không nằm ở controller:
   - [x] domain: compose / edit / cancel / open / markAvailable / claimRecipient / ẩn content
   - [x] unlock job chuyển đúng trạng thái
   - [x] email: SENT / FAILED retry / không gửi lại SENT / template không lộ content
-- [ ] Integration test (Testcontainers PostgreSQL):
-  - register/login
-  - create message self/other
-  - inbox ẩn content khi LOCKED
-  - open flow + openedAt
-  - email gửi khi unlock (mock mail sender)
+- [x] Integration test (Testcontainers PostgreSQL):
+  - [x] register/login
+  - [x] create message self/other
+  - [x] inbox ẩn content khi LOCKED
+  - [x] open flow + openedAt
+  - [x] email gửi khi unlock (mock mail sender)
 - [x] Scheduler test với clock cố định (`Clock` bean để inject thời gian)
 
 ---

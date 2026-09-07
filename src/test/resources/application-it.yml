@@ -1,0 +1,35 @@
+# Overrides src/test/resources/application.yml (H2) for Testcontainers PostgreSQL.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/future_message
+    username: future
+    password: future
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+app:
+  scheduler:
+    unlock:
+      enabled: false
+    notification:
+      enabled: false
+  mail:
+    from: noreply@futuremessage.test
+    inbox-url: http://localhost:3000/inbox
+  jwt:
+    secret: test-jwt-secret-key-32-bytes-min!!
+    access-token-ttl: 15m
+    refresh-token-ttl: 7d
+  auth:
+    rate-limit-requests: 1000
+    rate-limit-window: 1m

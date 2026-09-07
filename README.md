@@ -50,7 +50,21 @@ copy .env.example .env
 
 Hoặc set `JAVA_HOME` rồi chạy IDE. App lắng nghe `http://localhost:8080`.
 
-### 4. Chạy bằng Docker (sau khi đã `docker compose up -d` postgres/mailpit)
+### 4. Chạy test
+
+Cần JDK 21. Integration test Postgres cần **Docker Desktop** (Testcontainers kéo `postgres:16-alpine`).
+
+```bash
+# Windows
+.\mvnw.cmd test
+
+# Chỉ integration test Postgres
+.\mvnw.cmd test -Dtest=PostgresIntegrationTest
+```
+
+Unit / controller test dùng H2 in-memory. `PostgresIntegrationTest` chạy Flyway + `FOR UPDATE SKIP LOCKED` trên PostgreSQL 16 (Testcontainers). Docker Engine 29+ cần Docker API ≥ 1.44 — project đã set trong `src/test/resources/docker-java.properties`.
+
+### 5. Chạy bằng Docker (sau khi đã `docker compose up -d` postgres/mailpit)
 
 ```bash
 docker build -t future-message .
@@ -164,7 +178,7 @@ curl -s -X POST http://localhost:8080/api/v1/messages ^
 
 ## Scheduler (unlock)
 
-Job chạy trên 1 thread (`fm-scheduler-`), fixed delay 30s (dev/prod). Profile test tắt job (`app.scheduler.unlock.enabled=false`) vì H2 không dùng `FOR UPDATE SKIP LOCKED` như PostgreSQL.
+Job chạy trên 1 thread (`fm-scheduler-`), fixed delay 30s (dev/prod). Profile test/H2 tắt job (`app.scheduler.unlock.enabled=false`) vì H2 không dùng `FOR UPDATE SKIP LOCKED` như PostgreSQL. Integration test Postgres (`PostgresIntegrationTest`) gọi `UnlockService` trực tiếp trên Testcontainers.
 
 Mỗi lần chạy:
 
