@@ -10,6 +10,7 @@ Backend cho phép người dùng viết tin nhắn gửi cho chính mình hoặc
 - Flyway
 - Spring Mail
 - Spring Scheduler
+- springdoc-openapi (Swagger UI)
 - Docker Compose (PostgreSQL + Mailpit)
 
 Timezone mặc định của ứng dụng: **Asia/Ho_Chi_Minh**. Timestamp trong database lưu UTC (`timestamptz`).
@@ -50,7 +51,31 @@ copy .env.example .env
 
 Hoặc set `JAVA_HOME` rồi chạy IDE. App lắng nghe `http://localhost:8080`.
 
-### 4. Chạy test
+### 4. Test API bằng Swagger UI (chưa có frontend)
+
+Mở [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (redirect tới `/swagger-ui/index.html`). Spec OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
+
+Hai URL này **không cần token**. Profile `prod` tắt Swagger (`springdoc.*.enabled=false`).
+
+**Luồng thử nhanh**
+
+1. Mở nhóm **Auth** → `POST /api/v1/auth/register` → **Try it out** → giữ example (`ada@example.com` / `password1`) hoặc đổi email nếu đã đăng ký → **Execute**.
+2. Copy `accessToken` trong Response body (chuỗi JWT, không copy chữ `"accessToken"`).
+3. Bấm **Authorize** (ổ khóa góc phải) → dán token vào ô `bearerAuth` → **Authorize** → **Close**.  
+   **Không** gõ `Bearer ` trước token: Swagger tự thêm header `Authorization: Bearer <token>`.
+4. Gọi `GET /api/v1/users/me` — phải ra 200 và email vừa đăng ký.
+5. Nhóm **Messages** → `POST /api/v1/messages`:
+   - Gửi cho chính mình: xóa `recipientEmail` hoặc để đúng email của bạn.
+   - Gửi cho người khác: `recipientEmail` khác, ví dụ `bob@example.com`.
+   - `unlockAt` phải ở **tương lai** (example `2030-01-01T00:00:00+07:00` là hợp lệ).
+6. `GET /api/v1/messages/sent` — sender luôn thấy `content`.
+7. Nếu muốn thử inbox ẩn content: register user thứ hai, Authorize bằng token của Bob, gọi `GET /api/v1/messages/inbox`. Message `LOCKED` **không** có field `content`.
+
+Access token local hết hạn sau **15 phút**. Khi 401 `INVALID_TOKEN`, gọi `POST /api/v1/auth/refresh` với `refreshToken`, copy access token mới, Authorize lại.
+
+`POST /api/v1/messages/{id}/open` chỉ thành công khi message đã `AVAILABLE` (scheduler unlock mỗi 30 giây sau `unlockAt`). Muốn thử ngay: tạo message với `unlockAt` vài phút nữa, đợi job, rồi Open.
+
+### 5. Chạy test
 
 Cần JDK 21. Integration test Postgres cần **Docker Desktop** (Testcontainers kéo `postgres:16-alpine`).
 
@@ -64,7 +89,7 @@ Cần JDK 21. Integration test Postgres cần **Docker Desktop** (Testcontainers
 
 Unit / controller test dùng H2 in-memory. `PostgresIntegrationTest` chạy Flyway + `FOR UPDATE SKIP LOCKED` trên PostgreSQL 16 (Testcontainers). Docker Engine 29+ cần Docker API ≥ 1.44 — project đã set trong `src/test/resources/docker-java.properties`.
 
-### 5. Chạy bằng Docker (sau khi đã `docker compose up -d` postgres/mailpit)
+### 6. Chạy bằng Docker (sau khi đã `docker compose up -d` postgres/mailpit)
 
 ```bash
 docker build -t future-message .
@@ -129,7 +154,7 @@ Rule nằm ở `MessageRules` (ai được làm gì) và command methods trên `
 
 ## API overview
 
-Auth và Message API đã implement. Mọi endpoint Message đều cần Bearer access token.
+Auth và Message API đã implement. Mọi endpoint Message đều cần Bearer access token. Cách thử không cần curl: [Swagger UI](http://localhost:8080/swagger-ui.html) (mục **Test API bằng Swagger UI** ở trên).
 
 ### Auth
 

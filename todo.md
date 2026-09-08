@@ -196,7 +196,7 @@ Nằm ở domain, không nằm ở controller:
 ## 8. Chất lượng & bàn giao
 
 - [ ] `.gitignore`, `.editorconfig`
-- [ ] OpenAPI/Swagger UI (`/swagger-ui`)
+- [x] OpenAPI/Swagger UI (`/swagger-ui.html`, `/swagger-ui/index.html`, spec `/v3/api-docs`)
 - [ ] Seed data dev (1 user + 1 message sắp unlock)
 - [ ] Kiểm tra end-to-end bằng curl/httpie (hoặc test) vì chưa có frontend
 - [ ] Cập nhật `todo.md`: đánh dấu xong từng hạng mục khi implement

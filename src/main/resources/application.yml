@@ -66,6 +66,20 @@ app:
     rate-limit-requests: 20
     rate-limit-window: 1m
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+    persist-authorization: true
+    display-request-duration: true
+    try-it-out-enabled: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  show-actuator: false
+
 logging:
   level:
     org.flywaydb: INFO
