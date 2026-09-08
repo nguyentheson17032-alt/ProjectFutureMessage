@@ -214,7 +214,8 @@ Nằm ở domain, không nằm ở controller:
 6. ~~Scheduler~~  
 7. ~~Email~~  
 8. Test  
-9. Frontend  
+9. ~~Frontend~~  
+10. Admin dashboard  
 
 ---
 
@@ -259,10 +260,78 @@ npm run dev
 
 ---
 
+## 10. Admin dashboard (chưa làm)
+
+Mục tiêu: trang quản trị cho **ADMIN** theo dõi vận hành (user, message, email unlock), không thay thế hộp thư người dùng. User thường **không** thấy route/API này.
+
+Quyết định đã chốt cho phiên này:
+
+- Role: `USER` | `ADMIN`. Đăng ký công khai luôn tạo `USER`. Không tự nâng quyền trên UI.
+- Bootstrap admin: seed / env (`ADMIN_EMAIL` + `ADMIN_PASSWORD`) lúc khởi động nếu chưa có user đó.
+- JWT access token gắn `role`; `JwtAuthenticationFilter` map `ROLE_USER` / `ROLE_ADMIN` (hiện filter hard-code `ROLE_USER`).
+- `/api/v1/admin/**` chỉ `ROLE_ADMIN`. User thường → 403 `FORBIDDEN`.
+- Admin xem **metadata** mọi message. **Content**: chỉ khi `AVAILABLE` / `OPENED` (không đọc thư còn `LOCKED` — giữ invariant privacy).
+- Admin **không** mở hộp thư thay người nhận (`POST .../open` vẫn chỉ recipient).
+- Soft-disable user: `enabled=false` → không login/refresh; message đã tạo vẫn tồn tại.
+
+### 10.1. Domain, DB, security
+
+- [x] Enum `UserRole`: `USER` | `ADMIN`.
+- [x] Flyway `V6__user_role_and_enabled.sql`:
+  - `users.role VARCHAR(20) NOT NULL DEFAULT 'USER'` + check `USER`/`ADMIN`
+  - `users.enabled BOOLEAN NOT NULL DEFAULT TRUE`
+  - index `users(role)` nếu cần lọc admin
+- [x] Entity `User`: `role`, `enabled`; default `USER` / `true`.
+- [x] `UserPrincipal` + JWT claim `role`; `GET /api/v1/users/me` và `UserResponse` trả `role`.
+- [x] `SecurityConfig`: `requestMatchers("/api/v1/admin/**").hasRole("ADMIN")`; bật method security nếu dùng `@PreAuthorize`.
+- [x] Login: user `enabled=false` → 401 `INVALID_CREDENTIALS` (cùng message, không lộ “bị khóa”).
+- [x] Error codes mới nếu cần: `NOT_ADMIN`, `USER_DISABLED`, `CANNOT_MODIFY_SELF_ROLE`, `LAST_ADMIN`.
+- [x] Seed admin từ env (dev + README); không commit mật khẩu thật.
+
+### 10.2. Admin API (`/api/v1/admin`)
+
+Dùng `PageResponse` sẵn có. Không log content message đầy đủ.
+
+- [ ] `GET /api/v1/admin/stats` — tổng user; message theo `status`; notification `PENDING`/`SENT`/`FAILED`; message unlock trong 24h tới.
+- [ ] `GET /api/v1/admin/users` — phân trang; query `q` (email / displayName), `enabled`, `role`.
+- [ ] `GET /api/v1/admin/users/{id}` — hồ sơ + số message đã gửi / inbox gắn email đó.
+- [ ] `PATCH /api/v1/admin/users/{id}` — `enabled`; **không** đổi role qua API công khai (tránh tự phong / tự hạ last admin). Nếu sau này cho đổi role: cấm tự hạ chính mình nếu là admin cuối.
+- [ ] `GET /api/v1/admin/messages` — phân trang; filter `status`, `notificationStatus`, `senderEmail`, `recipientEmail`.
+- [ ] `GET /api/v1/admin/messages/{id}` — chi tiết vận hành (sender, recipient, status, unlockAt, openedAt, notification); ẩn `content` khi `LOCKED` / `CANCELLED` chưa từng mở.
+- [ ] `POST /api/v1/admin/messages/{id}/retry-notification` — chỉ khi `notification_status = FAILED` và status `AVAILABLE`/`OPENED`; set lại `PENDING` để job gửi lại.
+- [ ] Không thêm API admin sửa nội dung / đổi `unlockAt` / mở hộp thư hộ user.
+
+### 10.3. Frontend admin
+
+Cùng app `frontend/` (Vite + React). Route `/admin/*`, không tách app mới.
+
+- [ ] `RequireAdmin`: chưa login → `/login`; `role !== ADMIN` → 403 / trang “Không có quyền”.
+- [ ] Nav: chỉ ADMIN thấy link **Quản trị**.
+- [ ] `/admin` — dashboard: số liệu từ `stats` (thẻ user, message theo trạng thái, email FAILED).
+- [ ] `/admin/users` — bảng tìm kiếm, bật/tắt `enabled`.
+- [ ] `/admin/users/:id` — chi tiết user.
+- [ ] `/admin/messages` — bảng filter status / notification; badge FAILED nổi bật.
+- [ ] `/admin/messages/:id` — metadata + content nếu được phép; nút **Gửi lại email** khi FAILED.
+- [ ] Map lỗi admin sang tiếng Việt (`FORBIDDEN`, `USER_DISABLED`, …).
+- [ ] Style thống nhất Shell hiện tại; bảng/filter rõ, không cần chart library.
+
+### 10.4. Test & bàn giao
+
+- [ ] Unit/integration: user thường 403 `/api/v1/admin/**`; admin 200; JWT có `ROLE_ADMIN`.
+- [ ] User disabled không login được.
+- [ ] Stats đếm đúng; list filter + pagination.
+- [ ] Retry notification: FAILED → PENDING; SENT không retry.
+- [ ] Admin không nhận `content` của message `LOCKED`.
+- [ ] Cập nhật README + Swagger tag **Admin**.
+- [ ] Seed 1 admin + vài message (LOCKED / FAILED) để thử UI.
+- [ ] Kiểm tra UI: login admin → dashboard → users → messages → retry email (Mailpit).
+
+---
+
 ## Ngoài phạm vi phiên này (ghi nhận, chưa làm)
 
 - OAuth (Google)
 - File đính kèm / media
 - Multi-language email
-- Admin dashboard
 - Redis queue (có thể nâng cấp sau nếu volume lớn)
+- Admin: xem content thư LOCKED, sửa/xóa hộ user, audit log, 2FA admin

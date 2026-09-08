@@ -36,3 +36,6 @@ app:
   auth:
     rate-limit-requests: 1000
     rate-limit-window: 1m
+  admin:
+    email: ""
+    password: ""

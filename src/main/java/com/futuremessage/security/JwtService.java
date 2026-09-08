@@ -2,6 +2,7 @@ package com.futuremessage.security;
 
 import com.futuremessage.config.JwtProperties;
 import com.futuremessage.domain.User;
+import com.futuremessage.domain.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class JwtService {
 
     private static final String EMAIL_CLAIM = "email";
+    private static final String ROLE_CLAIM = "role";
 
     private final JwtProperties properties;
     private final Clock clock;
@@ -33,6 +35,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claim(EMAIL_CLAIM, user.getEmail())
+                .claim(ROLE_CLAIM, user.roleOrDefault().name())
                 .issuedAt(issuedAt)
                 .expiration(expiresAt)
                 .signWith(key)
@@ -46,10 +49,21 @@ public class JwtService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return new UserPrincipal(UUID.fromString(claims.getSubject()), claims.get(EMAIL_CLAIM, String.class));
+        return new UserPrincipal(
+                UUID.fromString(claims.getSubject()),
+                claims.get(EMAIL_CLAIM, String.class),
+                parseRole(claims.get(ROLE_CLAIM, String.class))
+        );
     }
 
     public Duration accessTokenTtl() {
         return properties.accessTokenTtl();
+    }
+
+    static UserRole parseRole(String claim) {
+        if (claim == null || claim.isBlank()) {
+            return UserRole.USER;
+        }
+        return UserRole.valueOf(claim);
     }
 }

@@ -1,6 +1,7 @@
 package com.futuremessage.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.futuremessage.repository.UserRepository;
 import com.futuremessage.web.dto.LoginRequest;
 import com.futuremessage.web.dto.LogoutRequest;
 import com.futuremessage.web.dto.RefreshRequest;
@@ -31,6 +32,9 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Test
     void registerLoginMeRefreshAndLogout() throws Exception {
         String email = "user-" + UUID.randomUUID() + "@example.com";
@@ -44,6 +48,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.refreshToken").isNotEmpty())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.user.email").value(email))
+                .andExpect(jsonPath("$.user.role").value("USER"))
+                .andExpect(jsonPath("$.user.enabled").value(true))
                 .andReturn();
 
         String accessToken = objectMapper.readTree(registered.getResponse().getContentAsString()).get("accessToken").asText();
@@ -54,6 +60,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.displayName").value("Ada"))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.enabled").value(true))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
         mockMvc.perform(post("/api/v1/auth/login")
@@ -131,6 +139,26 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new LoginRequest("missing-" + UUID.randomUUID() + "@example.com", "password1"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+    }
+
+    @Test
+    void loginWithDisabledAccountDoesNotRevealAccountIsLocked() throws Exception {
+        String email = "disabled-" + UUID.randomUUID() + "@example.com";
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RegisterRequest(email, "password1", "Ada"))))
+                .andExpect(status().isCreated());
+
+        userRepository.findByEmail(email).ifPresent(user -> {
+            user.setEnabled(false);
+            userRepository.save(user);
+        });
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(email, "password1"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
     }

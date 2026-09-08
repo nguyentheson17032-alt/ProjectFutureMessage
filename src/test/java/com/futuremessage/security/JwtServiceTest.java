@@ -2,6 +2,7 @@ package com.futuremessage.security;
 
 import com.futuremessage.config.JwtProperties;
 import com.futuremessage.domain.User;
+import com.futuremessage.domain.UserRole;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,31 @@ class JwtServiceTest {
 
         assertThat(principal.id()).isEqualTo(user.getId());
         assertThat(principal.email()).isEqualTo("ada@example.com");
+        assertThat(principal.role()).isEqualTo(UserRole.USER);
+        assertThat(principal.isAdmin()).isFalse();
         assertThat(jwtService.accessTokenTtl()).isEqualTo(Duration.ofMinutes(1));
+    }
+
+    @Test
+    void accessTokenCarriesAdminRole() {
+        JwtService jwtService = new JwtService(PROPERTIES, Clock.systemUTC());
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .email("admin@example.com")
+                .role(UserRole.ADMIN)
+                .build();
+
+        UserPrincipal principal = jwtService.parseAccessToken(jwtService.createAccessToken(user));
+
+        assertThat(principal.role()).isEqualTo(UserRole.ADMIN);
+        assertThat(principal.isAdmin()).isTrue();
+    }
+
+    @Test
+    void missingRoleClaimDefaultsToUser() {
+        assertThat(JwtService.parseRole(null)).isEqualTo(UserRole.USER);
+        assertThat(JwtService.parseRole("")).isEqualTo(UserRole.USER);
+        assertThat(JwtService.parseRole("ADMIN")).isEqualTo(UserRole.ADMIN);
     }
 
     @Test

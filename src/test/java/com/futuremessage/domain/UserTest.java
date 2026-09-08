@@ -14,4 +14,25 @@ class UserTest {
         assertThat(user.getEmail()).isEqualTo("ada@example.com");
         assertThat(user.hasEmail("ADA@example.com")).isTrue();
     }
+
+    @Test
+    void builderDefaultsToUserRoleAndEnabled() {
+        User user = User.builder()
+                .email("ada@example.com")
+                .passwordHash("hashed")
+                .displayName("Ada")
+                .build();
+
+        assertThat(user.getRole()).isEqualTo(UserRole.USER);
+        assertThat(user.isEnabled()).isTrue();
+        assertThat(user.isAdmin()).isFalse();
+        assertThat(user.roleOrDefault()).isEqualTo(UserRole.USER);
+    }
+
+    @Test
+    void adminFlagFollowsRole() {
+        User user = User.builder().role(UserRole.ADMIN).build();
+
+        assertThat(user.isAdmin()).isTrue();
+    }
 }

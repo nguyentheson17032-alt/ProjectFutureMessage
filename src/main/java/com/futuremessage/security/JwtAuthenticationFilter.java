@@ -1,5 +1,6 @@
 package com.futuremessage.security;
 
+import com.futuremessage.domain.UserRole;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -50,7 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(
                             principal,
                             null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                            authoritiesFor(principal.role())
                     );
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -59,5 +61,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             authenticationEntryPoint.writeInvalidToken(request, response);
         }
+    }
+
+    static List<SimpleGrantedAuthority> authoritiesFor(UserRole role) {
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        if (role == UserRole.ADMIN) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+        return List.copyOf(authorities);
     }
 }

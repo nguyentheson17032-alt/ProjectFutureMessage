@@ -5,6 +5,7 @@ import com.futuremessage.common.ErrorCode;
 import com.futuremessage.config.JwtProperties;
 import com.futuremessage.domain.RefreshToken;
 import com.futuremessage.domain.User;
+import com.futuremessage.domain.UserRole;
 import com.futuremessage.repository.MessageRepository;
 import com.futuremessage.repository.RefreshTokenRepository;
 import com.futuremessage.repository.UserRepository;
@@ -93,6 +94,8 @@ class AuthServiceTest {
         verify(userRepository).saveAndFlush(userCaptor.capture());
         assertThat(userCaptor.getValue().getEmail()).isEqualTo("ada@example.com");
         assertThat(userCaptor.getValue().getPasswordHash()).isEqualTo("hashed");
+        assertThat(userCaptor.getValue().getRole()).isEqualTo(UserRole.USER);
+        assertThat(userCaptor.getValue().isEnabled()).isTrue();
 
         ArgumentCaptor<RefreshToken> tokenCaptor = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository).save(tokenCaptor.capture());
@@ -142,7 +145,29 @@ class AuthServiceTest {
 
         assertThat(response.accessToken()).isEqualTo("access-token");
         assertThat(response.user().id()).isEqualTo(user.getId());
+        assertThat(response.user().role()).isEqualTo(UserRole.USER);
         verify(refreshTokenRepository).save(any(RefreshToken.class));
+    }
+
+    @Test
+    void loginRejectsDisabledUserWithSameErrorAsBadPassword() {
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .email("ada@example.com")
+                .passwordHash("hashed")
+                .displayName("Ada")
+                .enabled(false)
+                .build();
+        when(userRepository.findByEmail("ada@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password1", "hashed")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.login(new LoginRequest("ada@example.com", "password1")))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+
+        verify(jwtService, never()).createAccessToken(any());
+        verify(refreshTokenRepository, never()).save(any());
     }
 
     @Test
@@ -184,6 +209,32 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.REFRESH_TOKEN_REUSED);
 
         verify(refreshTokenRepository).revokeAllActiveByUserId(eq(user.getId()), eq(NOW));
+        verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
+    }
+
+    @Test
+    void refreshRejectsDisabledUserWithoutIssuingTokens() {
+        User user = User.builder()
+                .id(UUID.randomUUID())
+                .email("ada@example.com")
+                .displayName("Ada")
+                .enabled(false)
+                .build();
+        String raw = "refresh-raw";
+        RefreshToken stored = RefreshToken.builder()
+                .user(user)
+                .tokenHash(TokenHasher.sha256Hex(raw))
+                .expiresAt(NOW.plusSeconds(60))
+                .build();
+        when(refreshTokenRepository.findByTokenHashWithUser(TokenHasher.sha256Hex(raw))).thenReturn(Optional.of(stored));
+
+        assertThatThrownBy(() -> authService.refresh(raw))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+
+        assertThat(stored.isRevoked()).isTrue();
+        verify(jwtService, never()).createAccessToken(any());
         verify(refreshTokenRepository, never()).save(any(RefreshToken.class));
     }
 }

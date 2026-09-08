@@ -65,6 +65,10 @@ app:
   auth:
     rate-limit-requests: 20
     rate-limit-window: 1m
+  admin:
+    email: ${ADMIN_EMAIL:admin@futuremessage.local}
+    password: ${ADMIN_PASSWORD:adminpass1}
+    display-name: ${ADMIN_DISPLAY_NAME:Admin}
 
 springdoc:
   api-docs:

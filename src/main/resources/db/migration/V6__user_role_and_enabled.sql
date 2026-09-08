@@ -1,0 +1,8 @@
+ALTER TABLE users
+    ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'USER',
+    ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT TRUE;
+
+ALTER TABLE users
+    ADD CONSTRAINT users_role_chk CHECK (role IN ('USER', 'ADMIN'));
+
+CREATE INDEX idx_users_role ON users (role);

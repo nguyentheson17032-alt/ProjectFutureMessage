@@ -5,6 +5,7 @@ import com.futuremessage.common.ErrorCode;
 import com.futuremessage.config.JwtProperties;
 import com.futuremessage.domain.RefreshToken;
 import com.futuremessage.domain.User;
+import com.futuremessage.domain.UserRole;
 import com.futuremessage.repository.MessageRepository;
 import com.futuremessage.repository.RefreshTokenRepository;
 import com.futuremessage.repository.UserRepository;
@@ -70,6 +71,8 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .displayName(request.displayName().trim())
                 .emailVerified(false)
+                .role(UserRole.USER)
+                .enabled(true)
                 .build();
 
         try {
@@ -96,6 +99,9 @@ public class AuthService {
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
+        if (!user.isEnabled()) {
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+        }
 
         return issueTokens(user);
     }
@@ -116,6 +122,9 @@ public class AuthService {
         }
 
         stored.revoke(now);
+        if (!stored.getUser().isEnabled()) {
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
         return issueTokens(stored.getUser());
     }
 

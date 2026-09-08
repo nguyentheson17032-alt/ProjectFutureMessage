@@ -132,6 +132,9 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 | `MAIL_FROM` | `noreply@futuremessage.local` | Địa chỉ gửi |
 | `MAIL_INBOX_URL` | `http://localhost:5173/inbox` | Link inbox trong email thông báo |
 | `JWT_SECRET` | secret local (dev only) | HMAC key cho access token; **tối thiểu 32 bytes**. Prod bắt buộc set. |
+| `ADMIN_EMAIL` | `admin@futuremessage.local` (dev) | Email tài khoản ADMIN bootstrap. Trống = không tạo. Prod: set khi cần tạo admin lần đầu. |
+| `ADMIN_PASSWORD` | `adminpass1` (dev only) | Mật khẩu admin bootstrap (≥ 8). **Không** dùng giá trị này trên production. |
+| `ADMIN_DISPLAY_NAME` | `Admin` | Tên hiển thị khi bootstrap tạo admin mới. |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:[*],http://127.0.0.1:[*]` | Origin frontend được phép. `[*]` = mọi cổng (Vite 5173, v.v.) |
 | `APP_SCHEDULER_UNLOCK_ENABLED` | `true` | Tắt job unlock (test profile đặt `false`) |
 | `APP_SCHEDULER_UNLOCK_INTERVAL` | `30s` | Fixed delay giữa hai lần chạy job unlock |
@@ -178,7 +181,7 @@ Auth và Message API đã implement. Frontend nằm ở `frontend/` ([http://loc
 | `POST` | `/api/v1/auth/login` | public | Đăng nhập, trả access + refresh token |
 | `POST` | `/api/v1/auth/refresh` | public (body: refresh token) | Xoay refresh token, cấp access token mới |
 | `POST` | `/api/v1/auth/logout` | public (body: refresh token) | Xóa refresh token |
-| `GET` | `/api/v1/users/me` | Bearer access token | Thông tin user hiện tại |
+| `GET` | `/api/v1/users/me` | Bearer access token | Thông tin user hiện tại (`role`, `enabled`) |
 
 Ví dụ:
 
@@ -189,6 +192,8 @@ curl -s -X POST http://localhost:8080/api/v1/auth/register ^
 ```
 
 Access token gửi header `Authorization: Bearer <token>`. Refresh token chỉ gửi qua body, không lưu raw trong database (chỉ lưu SHA-256 hash).
+
+Đăng ký công khai luôn tạo `role=USER`. Local: lần đầu chạy app, bootstrap tạo ADMIN `admin@futuremessage.local` / `adminpass1` nếu email đó chưa tồn tại. User `enabled=false` không login/refresh được (cùng lỗi `INVALID_CREDENTIALS` / `INVALID_REFRESH_TOKEN`, không lộ “bị khóa”). API `/api/v1/admin/**` yêu cầu `ROLE_ADMIN` (endpoint dashboard ở bước 10.2).
 
 ### Messages
 

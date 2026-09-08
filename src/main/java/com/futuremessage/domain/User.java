@@ -2,6 +2,8 @@ package com.futuremessage.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -44,6 +46,15 @@ public class User {
     @Builder.Default
     private boolean emailVerified = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private UserRole role = UserRole.USER;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -58,6 +69,14 @@ public class User {
         return email != null && email.equals(normalizeEmail(candidate));
     }
 
+    public boolean isAdmin() {
+        return role == UserRole.ADMIN;
+    }
+
+    public UserRole roleOrDefault() {
+        return role == null ? UserRole.USER : role;
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -70,6 +89,9 @@ public class User {
         email = normalizeEmail(email);
         if (displayName != null) {
             displayName = displayName.trim();
+        }
+        if (role == null) {
+            role = UserRole.USER;
         }
     }
 
@@ -104,6 +126,7 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{id=" + id + ", email='" + email + "', displayName='" + displayName + "'}";
+        return "User{id=" + id + ", email='" + email + "', displayName='" + displayName
+                + "', role=" + role + ", enabled=" + enabled + "}";
     }
 }

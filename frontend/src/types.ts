@@ -1,12 +1,15 @@
 export type MessageStatus = 'LOCKED' | 'AVAILABLE' | 'OPENED' | 'CANCELLED'
 export type RecipientType = 'SELF' | 'OTHER'
 export type NotificationStatus = 'PENDING' | 'SENT' | 'FAILED'
+export type UserRole = 'USER' | 'ADMIN'
 
 export type User = {
   id: string
   email: string
   displayName: string
   emailVerified: boolean
+  role: UserRole
+  enabled: boolean
   createdAt: string
 }
 

@@ -1,6 +1,7 @@
 package com.futuremessage.web.dto;
 
 import com.futuremessage.domain.User;
+import com.futuremessage.domain.UserRole;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -10,6 +11,8 @@ public record UserResponse(
         String email,
         String displayName,
         boolean emailVerified,
+        UserRole role,
+        boolean enabled,
         Instant createdAt
 ) {
 
@@ -19,6 +22,8 @@ public record UserResponse(
                 user.getEmail(),
                 user.getDisplayName(),
                 user.isEmailVerified(),
+                user.roleOrDefault(),
+                user.isEnabled(),
                 user.getCreatedAt()
         );
     }
