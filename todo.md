@@ -198,8 +198,9 @@ Nằm ở domain, không nằm ở controller:
 - [ ] `.gitignore`, `.editorconfig`
 - [x] OpenAPI/Swagger UI (`/swagger-ui.html`, `/swagger-ui/index.html`, spec `/v3/api-docs`)
 - [ ] Seed data dev (1 user + 1 message sắp unlock)
-- [ ] Kiểm tra end-to-end bằng curl/httpie (hoặc test) vì chưa có frontend
-- [ ] Cập nhật `todo.md`: đánh dấu xong từng hạng mục khi implement
+- [x] Frontend website (`frontend/`, Vite + React + TypeScript) — xem mục 9
+- [ ] Kiểm tra end-to-end trên UI (register → compose → inbox → open)
+- [x] Cập nhật `todo.md`: đánh dấu xong từng hạng mục khi implement
 
 ---
 
@@ -213,12 +214,53 @@ Nằm ở domain, không nằm ở controller:
 6. ~~Scheduler~~  
 7. ~~Email~~  
 8. Test  
+9. Frontend  
+
+---
+
+## 9. Frontend website (đã làm)
+
+Stack: **Vite + React 19 + TypeScript + React Router** trong thư mục `frontend/`. Dev server `http://localhost:5173`, proxy `/api` → backend `http://localhost:8080`. Email inbox link mặc định: `http://localhost:5173/inbox`.
+
+### 9.1. Nền tảng
+
+- [x] Scaffold Vite (`react-ts`), `react-router-dom`, favicon phong bì, Google Fonts (Fraunces + Outfit).
+- [x] Proxy Vite `/api` → `localhost:8080`; biến `VITE_API_BASE_URL` cho bản production khác origin.
+- [x] Cập nhật `MAIL_INBOX_URL` mặc định, `.env.example`, README (cách chạy frontend).
+- [x] CORS: cho phép origin Vite (`localhost` / `127.0.0.1`, mọi cổng); login/register không còn 403 Invalid CORS. Vite proxy bỏ header `Origin` khi forward sang backend.
+
+### 9.2. Auth trên UI
+
+- [x] Đăng ký (`POST /api/v1/auth/register`) — email, mật khẩu ≥ 8, tên hiển thị.
+- [x] Đăng nhập (`POST /api/v1/auth/login`).
+- [x] Lưu access + refresh token + user trên `localStorage`.
+- [x] Tự refresh access token khi API trả 401; refresh fail → đăng xuất.
+- [x] Đăng xuất gọi `POST /api/v1/auth/logout` rồi xóa session.
+- [x] Route bảo vệ (`/inbox`, `/sent`, `/compose`, chi tiết/sửa thư); guest-only cho login/register.
+- [x] Nút mắt hiện/ẩn mật khẩu ở đăng nhập và đăng ký.
+- [x] Map mã lỗi API sang tiếng Việt (`EMAIL_ALREADY_EXISTS`, `INVALID_CREDENTIALS`, `MESSAGE_LOCKED`, …).
+
+### 9.3. Message trên UI
+
+- [x] Landing: giới thiệu sản phẩm + 3 bước Viết / Khóa / Mở.
+- [x] **Viết thư**: cho chính mình hoặc email người khác; chọn ngày/giờ mở (UTC+7) + nút nhanh 1 phút → 1 tuần khi thử.
+- [x] **Đã gửi**: thư gửi người khác hiện title/content; thư gửi cho chính mình ẩn đến khi mở. **Hộp thư**: ẩn đến khi mở. Hover phong bì: phóng to nhẹ.
+- [x] Chi tiết thư: countdown khi còn khóa; người nhận `AVAILABLE` bấm **Mở tin nhắn** (`POST .../open`).
+- [x] Sửa / hủy thư khi còn `LOCKED` và là người gửi (`PATCH` / `DELETE`).
+- [x] Badge trạng thái: `LOCKED` / `AVAILABLE` / `OPENED` / `CANCELLED`.
+
+### 9.4. Chạy frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
 ---
 
 ## Ngoài phạm vi phiên này (ghi nhận, chưa làm)
 
-- Frontend website
 - OAuth (Google)
 - File đính kèm / media
 - Multi-language email

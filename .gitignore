@@ -25,6 +25,11 @@ Thumbs.db
 *.p12
 *.jks
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+
 # Logs
 *.log
 logs/

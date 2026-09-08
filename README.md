@@ -1,6 +1,6 @@
 # Future Message
 
-Backend cho phép người dùng viết tin nhắn gửi cho chính mình hoặc người khác trong tương lai. Message bị khóa đến đúng `unlockAt`. Khi đến hạn, hệ thống chuyển trạng thái, gửi email, cho phép người nhận mở, và ghi nhận thời điểm mở.
+Website cho phép người dùng viết tin nhắn gửi cho chính mình hoặc người khác trong tương lai. Message bị khóa đến đúng `unlockAt`. Khi đến hạn, hệ thống chuyển trạng thái, gửi email, cho phép người nhận mở, và ghi nhận thời điểm mở.
 
 ## Stack
 
@@ -12,6 +12,7 @@ Backend cho phép người dùng viết tin nhắn gửi cho chính mình hoặc
 - Spring Scheduler
 - springdoc-openapi (Swagger UI)
 - Docker Compose (PostgreSQL + Mailpit)
+- Frontend: Vite + React + TypeScript (`frontend/`)
 
 Timezone mặc định của ứng dụng: **Asia/Ho_Chi_Minh**. Timestamp trong database lưu UTC (`timestamptz`).
 
@@ -22,6 +23,7 @@ Timezone mặc định của ứng dụng: **Asia/Ho_Chi_Minh**. Timestamp trong
 - JDK 21 (`JAVA_HOME` trỏ tới JDK 21)
 - Docker Desktop
 - Maven Wrapper đã có sẵn (`mvnw` / `mvnw.cmd`) — không cần cài Maven toàn cục
+- Node.js 20+ (để chạy frontend)
 
 ### 2. Hạ tầng local
 
@@ -51,7 +53,19 @@ copy .env.example .env
 
 Hoặc set `JAVA_HOME` rồi chạy IDE. App lắng nghe `http://localhost:8080`.
 
-### 4. Test API bằng Swagger UI (chưa có frontend)
+### 4. Chạy frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Mở [http://localhost:5173](http://localhost:5173). Vite proxy `/api` tới backend `http://localhost:8080` (CORS cũng cho phép origin này).
+
+Luồng trên UI: Đăng ký / Đăng nhập → **Viết thư** (cho mình hoặc email khác, chọn `unlockAt`) → **Đã gửi** / **Hộp thư** → mở chi tiết. Inbox `LOCKED` không hiện nội dung. Khi thư `AVAILABLE`, người nhận bấm **Mở tin nhắn**. Access token hết hạn 15 phút — frontend tự gọi refresh.
+
+### 5. Test API bằng Swagger UI
 
 Mở [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (redirect tới `/swagger-ui/index.html`). Spec OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
 
@@ -75,7 +89,7 @@ Access token local hết hạn sau **15 phút**. Khi 401 `INVALID_TOKEN`, gọi 
 
 `POST /api/v1/messages/{id}/open` chỉ thành công khi message đã `AVAILABLE` (scheduler unlock mỗi 30 giây sau `unlockAt`). Muốn thử ngay: tạo message với `unlockAt` vài phút nữa, đợi job, rồi Open.
 
-### 5. Chạy test
+### 6. Chạy test
 
 Cần JDK 21. Integration test Postgres cần **Docker Desktop** (Testcontainers kéo `postgres:16-alpine`).
 
@@ -89,7 +103,7 @@ Cần JDK 21. Integration test Postgres cần **Docker Desktop** (Testcontainers
 
 Unit / controller test dùng H2 in-memory. `PostgresIntegrationTest` chạy Flyway + `FOR UPDATE SKIP LOCKED` trên PostgreSQL 16 (Testcontainers). Docker Engine 29+ cần Docker API ≥ 1.44 — project đã set trong `src/test/resources/docker-java.properties`.
 
-### 6. Chạy bằng Docker (sau khi đã `docker compose up -d` postgres/mailpit)
+### 7. Chạy bằng Docker (sau khi đã `docker compose up -d` postgres/mailpit)
 
 ```bash
 docker build -t future-message .
@@ -116,9 +130,9 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 | `MAIL_USERNAME` | trống | SMTP user (prod) |
 | `MAIL_PASSWORD` | trống | SMTP password (prod) |
 | `MAIL_FROM` | `noreply@futuremessage.local` | Địa chỉ gửi |
-| `MAIL_INBOX_URL` | `http://localhost:3000/inbox` | Link inbox trong email thông báo |
+| `MAIL_INBOX_URL` | `http://localhost:5173/inbox` | Link inbox trong email thông báo |
 | `JWT_SECRET` | secret local (dev only) | HMAC key cho access token; **tối thiểu 32 bytes**. Prod bắt buộc set. |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Origin frontend được phép |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:[*],http://127.0.0.1:[*]` | Origin frontend được phép. `[*]` = mọi cổng (Vite 5173, v.v.) |
 | `APP_SCHEDULER_UNLOCK_ENABLED` | `true` | Tắt job unlock (test profile đặt `false`) |
 | `APP_SCHEDULER_UNLOCK_INTERVAL` | `30s` | Fixed delay giữa hai lần chạy job unlock |
 | `APP_SCHEDULER_UNLOCK_BATCH_SIZE` | `50` | Số message khóa tối đa mỗi lần chạy |
@@ -154,7 +168,7 @@ Rule nằm ở `MessageRules` (ai được làm gì) và command methods trên `
 
 ## API overview
 
-Auth và Message API đã implement. Mọi endpoint Message đều cần Bearer access token. Cách thử không cần curl: [Swagger UI](http://localhost:8080/swagger-ui.html) (mục **Test API bằng Swagger UI** ở trên).
+Auth và Message API đã implement. Frontend nằm ở `frontend/` ([http://localhost:5173](http://localhost:5173)). Cách thử API không cần UI: [Swagger UI](http://localhost:8080/swagger-ui.html) (mục **Test API bằng Swagger UI** ở trên).
 
 ### Auth
 

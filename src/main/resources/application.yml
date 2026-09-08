@@ -55,13 +55,13 @@ app:
       batch-size: 50
   mail:
     from: ${MAIL_FROM:noreply@futuremessage.local}
-    inbox-url: ${MAIL_INBOX_URL:http://localhost:3000/inbox}
+    inbox-url: ${MAIL_INBOX_URL:http://localhost:5173/inbox}
   jwt:
     secret: ${JWT_SECRET:local-dev-only-change-me-32bytes-min-key!}
     access-token-ttl: 15m
     refresh-token-ttl: 7d
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:http://localhost:[*],http://127.0.0.1:[*]}"
   auth:
     rate-limit-requests: 20
     rate-limit-window: 1m
