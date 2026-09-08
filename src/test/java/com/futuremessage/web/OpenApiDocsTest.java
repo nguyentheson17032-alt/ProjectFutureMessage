@@ -28,6 +28,8 @@ class OpenApiDocsTest {
                 .andExpect(jsonPath("$.paths['/api/v1/users/me'].get").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/messages'].post").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/messages/{id}/open'].post").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/admin/stats'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/admin/messages/{id}/retry-notification'].post").exists())
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type").value("http"))
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"));
     }

@@ -89,6 +89,22 @@ class MessageRulesTest {
         assertThat(MessageRules.visibleContent(message, recipient)).isEqualTo("secret");
     }
 
+    @Test
+    void adminSeesContentOnlyWhenUnlocked() {
+        Message message = lockedOtherMessage();
+
+        assertThat(MessageRules.visibleContentForAdmin(message)).isNull();
+
+        message.setStatus(MessageStatus.AVAILABLE);
+        assertThat(MessageRules.visibleContentForAdmin(message)).isEqualTo("secret");
+
+        message.setStatus(MessageStatus.OPENED);
+        assertThat(MessageRules.visibleContentForAdmin(message)).isEqualTo("secret");
+
+        message.setStatus(MessageStatus.CANCELLED);
+        assertThat(MessageRules.visibleContentForAdmin(message)).isNull();
+    }
+
     private Message lockedOtherMessage() {
         return Message.builder()
                 .id(UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))

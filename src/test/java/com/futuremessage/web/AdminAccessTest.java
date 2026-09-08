@@ -87,7 +87,9 @@ class AdminAccessTest {
 
         mockMvc.perform(get("/api/v1/admin/stats")
                         .header("Authorization", "Bearer " + accessToken))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalUsers").isNumber())
+                .andExpect(jsonPath("$.messagesByStatus").exists())
+                .andExpect(jsonPath("$.notifications").exists());
     }
 }

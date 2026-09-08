@@ -23,6 +23,7 @@ public enum ErrorCode {
     MESSAGE_NOT_AVAILABLE(HttpStatus.CONFLICT, "Message is not available to open"),
     NOT_SENDER(HttpStatus.FORBIDDEN, "Only the sender can perform this action"),
     NOT_RECIPIENT(HttpStatus.FORBIDDEN, "Only the recipient can open this message"),
+    NOTIFICATION_NOT_RETRYABLE(HttpStatus.CONFLICT, "Only FAILED notifications on unlocked messages can be retried"),
     UNLOCK_AT_MUST_BE_FUTURE(HttpStatus.BAD_REQUEST, "unlockAt must be in the future"),
     CONCURRENT_MODIFICATION(HttpStatus.CONFLICT, "The resource was modified by another request"),
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),

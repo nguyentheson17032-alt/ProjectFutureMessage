@@ -292,14 +292,14 @@ Quyết định đã chốt cho phiên này:
 
 Dùng `PageResponse` sẵn có. Không log content message đầy đủ.
 
-- [ ] `GET /api/v1/admin/stats` — tổng user; message theo `status`; notification `PENDING`/`SENT`/`FAILED`; message unlock trong 24h tới.
-- [ ] `GET /api/v1/admin/users` — phân trang; query `q` (email / displayName), `enabled`, `role`.
-- [ ] `GET /api/v1/admin/users/{id}` — hồ sơ + số message đã gửi / inbox gắn email đó.
-- [ ] `PATCH /api/v1/admin/users/{id}` — `enabled`; **không** đổi role qua API công khai (tránh tự phong / tự hạ last admin). Nếu sau này cho đổi role: cấm tự hạ chính mình nếu là admin cuối.
-- [ ] `GET /api/v1/admin/messages` — phân trang; filter `status`, `notificationStatus`, `senderEmail`, `recipientEmail`.
-- [ ] `GET /api/v1/admin/messages/{id}` — chi tiết vận hành (sender, recipient, status, unlockAt, openedAt, notification); ẩn `content` khi `LOCKED` / `CANCELLED` chưa từng mở.
-- [ ] `POST /api/v1/admin/messages/{id}/retry-notification` — chỉ khi `notification_status = FAILED` và status `AVAILABLE`/`OPENED`; set lại `PENDING` để job gửi lại.
-- [ ] Không thêm API admin sửa nội dung / đổi `unlockAt` / mở hộp thư hộ user.
+- [x] `GET /api/v1/admin/stats` — tổng user; message theo `status`; notification `PENDING`/`SENT`/`FAILED`; message unlock trong 24h tới.
+- [x] `GET /api/v1/admin/users` — phân trang; query `q` (email / displayName), `enabled`, `role`.
+- [x] `GET /api/v1/admin/users/{id}` — hồ sơ + số message đã gửi / inbox gắn email đó.
+- [x] `PATCH /api/v1/admin/users/{id}` — `enabled`; **không** đổi role qua API công khai (tránh tự phong / tự hạ last admin). Nếu sau này cho đổi role: cấm tự hạ chính mình nếu là admin cuối.
+- [x] `GET /api/v1/admin/messages` — phân trang; filter `status`, `notificationStatus`, `senderEmail`, `recipientEmail`.
+- [x] `GET /api/v1/admin/messages/{id}` — chi tiết vận hành (sender, recipient, status, unlockAt, openedAt, notification); ẩn `content` khi `LOCKED` / `CANCELLED` chưa từng mở.
+- [x] `POST /api/v1/admin/messages/{id}/retry-notification` — chỉ khi `notification_status = FAILED` và status `AVAILABLE`/`OPENED`; set lại `PENDING` để job gửi lại.
+- [x] Không thêm API admin sửa nội dung / đổi `unlockAt` / mở hộp thư hộ user.
 
 ### 10.3. Frontend admin
 

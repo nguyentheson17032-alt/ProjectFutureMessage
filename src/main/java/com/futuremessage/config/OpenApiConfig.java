@@ -31,6 +31,8 @@ public class OpenApiConfig {
                                 4. Call User and Message endpoints. Swagger sends `Authorization: Bearer <token>`.
 
                                 Access tokens last 15 minutes locally. When they expire, call `/api/v1/auth/refresh`.
+
+                                **Admin** (`/api/v1/admin/**`) requires a JWT with role ADMIN. Regular users get 403.
                                 """))
                 .servers(List.of(new Server().url("/").description("This server")))
                 .components(new Components()

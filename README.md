@@ -165,13 +165,15 @@ Rule nằm ở `MessageRules` (ai được làm gì) và command methods trên `
 | Mở chỉ khi `AVAILABLE`; đã `OPENED` thì idempotent | `Message.open` |
 | `openedAt` ghi một lần, không overwrite | `Message.setOpenedAt` |
 | Người gửi luôn thấy content; người nhận chỉ thấy khi `AVAILABLE`/`OPENED` | `MessageRules.visibleContent` |
+| Admin chỉ thấy content khi `AVAILABLE`/`OPENED` | `MessageRules.visibleContentForAdmin` |
 | Đăng ký bằng email đã là recipient → gắn `recipient_user_id` | `Message.claimRecipient` + `AuthService.register` (bulk update) |
 | `LOCKED` → `AVAILABLE` khi `unlockAt <= now` | `Message.markAvailable` — `UnlockScheduler` → `UnlockService` |
 | Email unlock: PENDING/FAILED → SENT; không gửi lại SENT | `Message.markNotificationSent` / `markNotificationFailed` — `NotificationScheduler` → `NotificationService` |
+| Admin retry email: FAILED → PENDING (chỉ AVAILABLE/OPENED) | `Message.queueNotificationRetry` — `AdminService.retryNotification` |
 
 ## API overview
 
-Auth và Message API đã implement. Frontend nằm ở `frontend/` ([http://localhost:5173](http://localhost:5173)). Cách thử API không cần UI: [Swagger UI](http://localhost:8080/swagger-ui.html) (mục **Test API bằng Swagger UI** ở trên).
+Auth, Message và Admin API đã implement. Frontend nằm ở `frontend/` ([http://localhost:5173](http://localhost:5173)). Cách thử API không cần UI: [Swagger UI](http://localhost:8080/swagger-ui.html) (mục **Test API bằng Swagger UI** ở trên). Tag **Admin** trong Swagger cần token của user `ADMIN`.
 
 ### Auth
 
@@ -193,7 +195,7 @@ curl -s -X POST http://localhost:8080/api/v1/auth/register ^
 
 Access token gửi header `Authorization: Bearer <token>`. Refresh token chỉ gửi qua body, không lưu raw trong database (chỉ lưu SHA-256 hash).
 
-Đăng ký công khai luôn tạo `role=USER`. Local: lần đầu chạy app, bootstrap tạo ADMIN `admin@futuremessage.local` / `adminpass1` nếu email đó chưa tồn tại. User `enabled=false` không login/refresh được (cùng lỗi `INVALID_CREDENTIALS` / `INVALID_REFRESH_TOKEN`, không lộ “bị khóa”). API `/api/v1/admin/**` yêu cầu `ROLE_ADMIN` (endpoint dashboard ở bước 10.2).
+Đăng ký công khai luôn tạo `role=USER`. Local: lần đầu chạy app, bootstrap tạo ADMIN `admin@futuremessage.local` / `adminpass1` nếu email đó chưa tồn tại. User `enabled=false` không login/refresh được (cùng lỗi `INVALID_CREDENTIALS` / `INVALID_REFRESH_TOKEN`, không lộ “bị khóa”). API `/api/v1/admin/**` yêu cầu `ROLE_ADMIN`.
 
 ### Messages
 
@@ -210,6 +212,22 @@ Mọi endpoint dưới đây cần header `Authorization: Bearer <accessToken>`.
 | `POST` | `/api/v1/messages/{id}/open` | Người nhận mở khi `AVAILABLE`. Idempotent nếu đã `OPENED`. |
 
 Query `sent` / `inbox`: `page` (mặc định 0), `size` (mặc định 20, tối đa 100).
+
+### Admin
+
+Chỉ `ROLE_ADMIN`. User thường → 403 `FORBIDDEN`. Trang vận hành: xem user/message/email unlock, **không** thay hộp thư người dùng. Admin **không** được sửa nội dung, đổi `unlockAt`, hay gọi `POST /messages/{id}/open` hộ người nhận.
+
+Content: admin chỉ thấy khi message `AVAILABLE` hoặc `OPENED`. `LOCKED` / `CANCELLED` trả metadata, không có field `content`.
+
+| Method | Path | Mô tả |
+| --- | --- | --- |
+| `GET` | `/api/v1/admin/stats` | Tổng user; message theo `status`; notification `PENDING`/`SENT`/`FAILED`; số message `LOCKED` sẽ unlock trong 24h tới |
+| `GET` | `/api/v1/admin/users` | Phân trang. Query `q` (email / displayName), `enabled`, `role` |
+| `GET` | `/api/v1/admin/users/{id}` | Hồ sơ + `sentCount` / `inboxCount` |
+| `PATCH` | `/api/v1/admin/users/{id}` | Body `{ "enabled": true\|false }`. Không đổi role |
+| `GET` | `/api/v1/admin/messages` | Phân trang metadata (không `content`). Filter `status`, `notificationStatus`, `senderEmail`, `recipientEmail` |
+| `GET` | `/api/v1/admin/messages/{id}` | Chi tiết vận hành; ẩn `content` khi `LOCKED` / `CANCELLED` |
+| `POST` | `/api/v1/admin/messages/{id}/retry-notification` | Chỉ khi `notificationStatus=FAILED` và status `AVAILABLE`/`OPENED` → set `PENDING` để job gửi lại. `SENT` → 409 `NOTIFICATION_NOT_RETRYABLE` |
 
 Ví dụ tạo message cho chính mình:
 

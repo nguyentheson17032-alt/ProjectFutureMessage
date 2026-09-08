@@ -255,6 +255,20 @@ public class Message {
     }
 
     /**
+     * Admin đưa email {@code FAILED} trở lại {@code PENDING} để job gửi lại.
+     * Chỉ khi message đã mở khóa ({@code AVAILABLE}/{@code OPENED}) và chưa {@code SENT}.
+     */
+    public void queueNotificationRetry() {
+        if (notificationStatus != NotificationStatus.FAILED) {
+            throw new BusinessException(ErrorCode.NOTIFICATION_NOT_RETRYABLE);
+        }
+        if (status != MessageStatus.AVAILABLE && status != MessageStatus.OPENED) {
+            throw new BusinessException(ErrorCode.MESSAGE_NOT_AVAILABLE);
+        }
+        this.notificationStatus = NotificationStatus.PENDING;
+    }
+
+    /**
      * Khi user đăng ký bằng email đã từng là recipient: gắn {@code recipientUser} nếu chưa có.
      * Không ghi đè nếu message đã thuộc user khác.
      */

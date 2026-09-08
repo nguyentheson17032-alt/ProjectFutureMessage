@@ -218,6 +218,35 @@ class MessageTest {
     }
 
     @Test
+    void queueNotificationRetryMovesFailedAvailableBackToPending() {
+        Message message = lockedOtherMessage();
+        message.markAvailable(FUTURE);
+        message.markNotificationFailed();
+
+        message.queueNotificationRetry();
+
+        assertThat(message.getNotificationStatus()).isEqualTo(NotificationStatus.PENDING);
+    }
+
+    @Test
+    void queueNotificationRetryRejectsSentAndLocked() {
+        Message sent = lockedOtherMessage();
+        sent.markAvailable(FUTURE);
+        sent.markNotificationSent(FUTURE);
+        assertThatThrownBy(sent::queueNotificationRetry)
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.NOTIFICATION_NOT_RETRYABLE);
+
+        Message locked = lockedOtherMessage();
+        locked.setNotificationStatus(NotificationStatus.FAILED);
+        assertThatThrownBy(locked::queueNotificationRetry)
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.MESSAGE_NOT_AVAILABLE);
+    }
+
+    @Test
     void markNotificationSentRejectedWhileLocked() {
         Message locked = lockedOtherMessage();
         assertThatThrownBy(() -> locked.markNotificationSent(FUTURE))

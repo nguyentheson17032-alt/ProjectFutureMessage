@@ -81,4 +81,16 @@ public final class MessageRules {
         }
         return null;
     }
+
+    /**
+     * Admin xem metadata mọi message. Content chỉ khi đã mở khóa
+     * ({@code AVAILABLE} / {@code OPENED}) — không đọc thư còn {@code LOCKED}
+     * hoặc {@code CANCELLED} (chưa từng mở).
+     */
+    public static String visibleContentForAdmin(Message message) {
+        if (message.isContentVisibleToRecipient()) {
+            return message.getContent();
+        }
+        return null;
+    }
 }

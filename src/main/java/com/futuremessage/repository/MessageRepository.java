@@ -1,6 +1,8 @@
 package com.futuremessage.repository;
 
 import com.futuremessage.domain.Message;
+import com.futuremessage.domain.MessageStatus;
+import com.futuremessage.domain.NotificationStatus;
 import com.futuremessage.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -70,4 +72,50 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
     @EntityGraph(attributePaths = {"sender"})
     @Query("select m from Message m where m.id in :ids")
     List<Message> findDetailedByIdIn(@Param("ids") List<UUID> ids);
+
+    long countByStatus(MessageStatus status);
+
+    long countByNotificationStatus(NotificationStatus notificationStatus);
+
+    long countBySender_Id(UUID senderId);
+
+    @Query("""
+            select count(m) from Message m
+            where m.status <> com.futuremessage.domain.MessageStatus.CANCELLED
+              and (m.recipientUser.id = :userId or m.recipientEmail = :email)
+            """)
+    long countInbox(@Param("userId") UUID userId, @Param("email") String email);
+
+    @Query("""
+            select count(m) from Message m
+            where m.status = com.futuremessage.domain.MessageStatus.LOCKED
+              and m.unlockAt > :now
+              and m.unlockAt <= :until
+            """)
+    long countLockedUnlockingBetween(@Param("now") Instant now, @Param("until") Instant until);
+
+    @EntityGraph(attributePaths = {"sender", "recipientUser"})
+    @Query(
+            value = """
+                    select m from Message m
+                    where (:status is null or m.status = :status)
+                      and (:notificationStatus is null or m.notificationStatus = :notificationStatus)
+                      and (:senderEmail is null or m.sender.email = :senderEmail)
+                      and (:recipientEmail is null or m.recipientEmail = :recipientEmail)
+                    """,
+            countQuery = """
+                    select count(m) from Message m
+                    where (:status is null or m.status = :status)
+                      and (:notificationStatus is null or m.notificationStatus = :notificationStatus)
+                      and (:senderEmail is null or m.sender.email = :senderEmail)
+                      and (:recipientEmail is null or m.recipientEmail = :recipientEmail)
+                    """
+    )
+    Page<Message> searchForAdmin(
+            @Param("status") MessageStatus status,
+            @Param("notificationStatus") NotificationStatus notificationStatus,
+            @Param("senderEmail") String senderEmail,
+            @Param("recipientEmail") String recipientEmail,
+            Pageable pageable
+    );
 }
