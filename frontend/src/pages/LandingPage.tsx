@@ -18,7 +18,11 @@ export function LandingPage() {
           Khi đến hạn, hệ thống mở khóa, gửi email, và người nhận mới được đọc.
         </p>
         <div className="hero-actions">
-          {user ? (
+          {user?.role === 'ADMIN' ? (
+            <Link to="/admin" className="btn">
+              Vào quản trị
+            </Link>
+          ) : user ? (
             <Link to="/compose" className="btn">
               Viết thư mới
             </Link>

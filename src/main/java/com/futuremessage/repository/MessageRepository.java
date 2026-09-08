@@ -77,6 +77,8 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
 
     long countByNotificationStatus(NotificationStatus notificationStatus);
 
+    Optional<Message> findFirstByTitle(String title);
+
     long countBySender_Id(UUID senderId);
 
     @Query("""

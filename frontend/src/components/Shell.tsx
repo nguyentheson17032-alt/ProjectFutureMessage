@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { homePath } from '../auth/paths'
 
 export function Shell() {
   const { user, logout } = useAuth()
@@ -14,7 +15,7 @@ export function Shell() {
     <div className="app-shell">
       <div className="sky" aria-hidden="true" />
       <header className="topbar">
-        <NavLink to={user ? '/inbox' : '/'} className="brand">
+        <NavLink to={homePath(user)} className="brand">
           <span className="brand-seal" aria-hidden="true" />
           <span className="brand-text">
             Future Message
@@ -25,6 +26,7 @@ export function Shell() {
           <nav className="nav">
             <NavLink to="/inbox">Hộp thư</NavLink>
             <NavLink to="/sent">Đã gửi</NavLink>
+            {user.role === 'ADMIN' ? <NavLink to="/admin">Quản trị</NavLink> : null}
             <NavLink to="/compose" className="nav-cta">
               Viết thư
             </NavLink>

@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useAuth } from './AuthContext'
+import { homePath } from './paths'
 
 export function RequireAuth() {
   const { user, ready } = useAuth()
@@ -24,6 +25,6 @@ export function RequireAuth() {
 export function GuestOnly({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth()
   if (!ready) return null
-  if (user) return <Navigate to="/inbox" replace />
+  if (user) return <Navigate to={homePath(user)} replace />
   return children
 }

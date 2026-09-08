@@ -157,6 +157,23 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
     }
 
+    @Test
+    void adminUserListSupportsPagination() throws Exception {
+        String adminToken = loginAsAdmin();
+        register("page-a-" + UUID.randomUUID() + "@example.com", "Ada");
+        register("page-b-" + UUID.randomUUID() + "@example.com", "Bob");
+
+        mockMvc.perform(get("/api/v1/admin/users")
+                        .header("Authorization", bearer(adminToken))
+                        .param("page", "0")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.totalPages").isNumber());
+    }
+
     private String loginAsAdmin() throws Exception {
         String email = "admin-api-" + UUID.randomUUID() + "@example.com";
         userRepository.save(User.builder()

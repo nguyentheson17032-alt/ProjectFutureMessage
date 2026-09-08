@@ -197,7 +197,7 @@ Nằm ở domain, không nằm ở controller:
 
 - [ ] `.gitignore`, `.editorconfig`
 - [x] OpenAPI/Swagger UI (`/swagger-ui.html`, `/swagger-ui/index.html`, spec `/v3/api-docs`)
-- [ ] Seed data dev (1 user + 1 message sắp unlock)
+- [x] Seed data dev (1 admin + Ada/Bob + thư LOCKED / FAILED / OPENED)
 - [x] Frontend website (`frontend/`, Vite + React + TypeScript) — xem mục 9
 - [ ] Kiểm tra end-to-end trên UI (register → compose → inbox → open)
 - [x] Cập nhật `todo.md`: đánh dấu xong từng hạng mục khi implement
@@ -260,7 +260,7 @@ npm run dev
 
 ---
 
-## 10. Admin dashboard (chưa làm)
+## 10. Admin dashboard
 
 Mục tiêu: trang quản trị cho **ADMIN** theo dõi vận hành (user, message, email unlock), không thay thế hộp thư người dùng. User thường **không** thấy route/API này.
 
@@ -305,26 +305,26 @@ Dùng `PageResponse` sẵn có. Không log content message đầy đủ.
 
 Cùng app `frontend/` (Vite + React). Route `/admin/*`, không tách app mới.
 
-- [ ] `RequireAdmin`: chưa login → `/login`; `role !== ADMIN` → 403 / trang “Không có quyền”.
-- [ ] Nav: chỉ ADMIN thấy link **Quản trị**.
-- [ ] `/admin` — dashboard: số liệu từ `stats` (thẻ user, message theo trạng thái, email FAILED).
-- [ ] `/admin/users` — bảng tìm kiếm, bật/tắt `enabled`.
-- [ ] `/admin/users/:id` — chi tiết user.
-- [ ] `/admin/messages` — bảng filter status / notification; badge FAILED nổi bật.
-- [ ] `/admin/messages/:id` — metadata + content nếu được phép; nút **Gửi lại email** khi FAILED.
-- [ ] Map lỗi admin sang tiếng Việt (`FORBIDDEN`, `USER_DISABLED`, …).
-- [ ] Style thống nhất Shell hiện tại; bảng/filter rõ, không cần chart library.
+- [x] `RequireAdmin`: chưa login → `/login`; `role !== ADMIN` → 403 / trang “Không có quyền”.
+- [x] Nav: chỉ ADMIN thấy link **Quản trị**.
+- [x] `/admin` — dashboard: số liệu từ `stats` (thẻ user, message theo trạng thái, email FAILED).
+- [x] `/admin/users` — bảng tìm kiếm, bật/tắt `enabled`.
+- [x] `/admin/users/:id` — chi tiết user.
+- [x] `/admin/messages` — bảng filter status / notification; badge FAILED nổi bật.
+- [x] `/admin/messages/:id` — metadata + content nếu được phép; nút **Gửi lại email** khi FAILED.
+- [x] Map lỗi admin sang tiếng Việt (`FORBIDDEN`, `USER_DISABLED`, `NOTIFICATION_NOT_RETRYABLE`, …).
+- [x] Style thống nhất Shell hiện tại; bảng/filter rõ, không cần chart library.
 
 ### 10.4. Test & bàn giao
 
-- [ ] Unit/integration: user thường 403 `/api/v1/admin/**`; admin 200; JWT có `ROLE_ADMIN`.
-- [ ] User disabled không login được.
-- [ ] Stats đếm đúng; list filter + pagination.
-- [ ] Retry notification: FAILED → PENDING; SENT không retry.
-- [ ] Admin không nhận `content` của message `LOCKED`.
-- [ ] Cập nhật README + Swagger tag **Admin**.
-- [ ] Seed 1 admin + vài message (LOCKED / FAILED) để thử UI.
-- [ ] Kiểm tra UI: login admin → dashboard → users → messages → retry email (Mailpit).
+- [x] Unit/integration: user thường 403 `/api/v1/admin/**`; admin 200; JWT có `ROLE_ADMIN`.
+- [x] User disabled không login được.
+- [x] Stats đếm đúng; list filter + pagination.
+- [x] Retry notification: FAILED → PENDING; SENT không retry.
+- [x] Admin không nhận `content` của message `LOCKED`.
+- [x] Cập nhật README + Swagger tag **Admin**.
+- [x] Seed 1 admin + vài message (LOCKED / FAILED) để thử UI.
+- [ ] Kiểm tra UI trên máy local: login admin → dashboard → users → messages → retry email (Mailpit). Docker Desktop cần chạy.
 
 ---
 

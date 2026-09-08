@@ -14,6 +14,7 @@ const VI: Record<string, string> = {
   USER_DISABLED: 'Tài khoản đã bị vô hiệu hóa.',
   CANNOT_MODIFY_SELF_ROLE: 'Không thể tự đổi quyền của chính mình.',
   LAST_ADMIN: 'Không thể thay đổi quản trị viên cuối cùng.',
+  NOTIFICATION_NOT_RETRYABLE: 'Chỉ gửi lại email khi thông báo đang FAILED và thư đã mở khóa.',
   NOT_FOUND: 'Không tìm thấy dữ liệu.',
   MESSAGE_NOT_FOUND: 'Không tìm thấy tin nhắn.',
   MESSAGE_LOCKED: 'Tin nhắn vẫn đang khóa.',

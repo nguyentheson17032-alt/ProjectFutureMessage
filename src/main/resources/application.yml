@@ -69,6 +69,8 @@ app:
     email: ${ADMIN_EMAIL:admin@futuremessage.local}
     password: ${ADMIN_PASSWORD:adminpass1}
     display-name: ${ADMIN_DISPLAY_NAME:Admin}
+  dev-seed:
+    enabled: ${APP_DEV_SEED_ENABLED:true}
 
 springdoc:
   api-docs:

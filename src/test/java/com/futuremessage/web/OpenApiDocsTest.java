@@ -6,6 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +31,7 @@ class OpenApiDocsTest {
                 .andExpect(jsonPath("$.paths['/api/v1/messages/{id}/open'].post").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/admin/stats'].get").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/admin/messages/{id}/retry-notification'].post").exists())
+                .andExpect(jsonPath("$.tags[*].name", hasItem("Admin")))
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.type").value("http"))
                 .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"));
     }

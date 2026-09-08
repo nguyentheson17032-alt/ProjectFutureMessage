@@ -156,6 +156,14 @@ class AdminServiceTest {
     }
 
     @Test
+    void listUsersRejectsInvalidPageSize() {
+        assertThatThrownBy(() -> adminService.listUsers(null, null, null, 0, 0))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getCode())
+                .isEqualTo(ErrorCode.VALIDATION_ERROR);
+    }
+
+    @Test
     void unknownUserIsNotFound() {
         UUID missing = UUID.randomUUID();
         when(userRepository.findById(missing)).thenReturn(Optional.empty());

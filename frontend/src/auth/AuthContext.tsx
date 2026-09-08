@@ -6,7 +6,7 @@ import type { User } from '../types'
 type AuthContextValue = {
   user: User | null
   ready: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
   register: (email: string, password: string, displayName: string) => Promise<void>
   logout: () => Promise<void>
 }
@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth = await authApi.login(email, password)
     persistSession(auth)
     setUser(auth.user)
+    return auth.user
   }, [])
 
   const register = useCallback(async (email: string, password: string, displayName: string) => {

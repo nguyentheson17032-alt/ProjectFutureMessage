@@ -32,7 +32,8 @@ public class OpenApiConfig {
 
                                 Access tokens last 15 minutes locally. When they expire, call `/api/v1/auth/refresh`.
 
-                                **Admin** (`/api/v1/admin/**`) requires a JWT with role ADMIN. Regular users get 403.
+                                **Admin** (`/api/v1/admin/**`, Swagger tag **Admin**) requires a JWT with role ADMIN.
+                                Local: login as `admin@futuremessage.local`. Regular users get 403.
                                 """))
                 .servers(List.of(new Server().url("/").description("This server")))
                 .components(new Components()

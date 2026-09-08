@@ -65,6 +65,8 @@ Mở [http://localhost:5173](http://localhost:5173). Vite proxy `/api` tới bac
 
 Luồng trên UI: Đăng ký / Đăng nhập → **Viết thư** (cho mình hoặc email khác, chọn `unlockAt`) → **Đã gửi** / **Hộp thư** → mở chi tiết. Inbox `LOCKED` không hiện nội dung. Khi thư `AVAILABLE`, người nhận bấm **Mở tin nhắn**. Access token hết hạn 15 phút — frontend tự gọi refresh.
 
+**Quản trị (ADMIN):** đăng nhập `admin@futuremessage.local` / `adminpass1` → vào thẳng dashboard [http://localhost:5173/admin](http://localhost:5173/admin) (không vào hộp thư). User thường không thấy link; vào `/admin` ra trang “Không có quyền”. Dashboard, user, message, nút **Gửi lại email** khi notification `FAILED`. Local seed thêm Ada/Bob (`password1`) và ba thư demo (`[dev] Thư còn khóa`, `[dev] Email gửi thất bại`, `[dev] Thư đã mở`). Restart backend để đưa thư FAILED demo về `FAILED` rồi bấm gửi lại trước khi job 30s gửi giúp; email hiện ở [Mailpit](http://localhost:8025).
+
 ### 5. Test API bằng Swagger UI
 
 Mở [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (redirect tới `/swagger-ui/index.html`). Spec OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs).
@@ -135,6 +137,7 @@ Trên Linux/macOS dùng `\` thay cho `^`.
 | `ADMIN_EMAIL` | `admin@futuremessage.local` (dev) | Email tài khoản ADMIN bootstrap. Trống = không tạo. Prod: set khi cần tạo admin lần đầu. |
 | `ADMIN_PASSWORD` | `adminpass1` (dev only) | Mật khẩu admin bootstrap (≥ 8). **Không** dùng giá trị này trên production. |
 | `ADMIN_DISPLAY_NAME` | `Admin` | Tên hiển thị khi bootstrap tạo admin mới. |
+| `APP_DEV_SEED_ENABLED` | `true` (local) | Seed Ada/Bob + thư LOCKED/FAILED/OPENED cho UI admin. `prod`/test = `false`. |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:[*],http://127.0.0.1:[*]` | Origin frontend được phép. `[*]` = mọi cổng (Vite 5173, v.v.) |
 | `APP_SCHEDULER_UNLOCK_ENABLED` | `true` | Tắt job unlock (test profile đặt `false`) |
 | `APP_SCHEDULER_UNLOCK_INTERVAL` | `30s` | Fixed delay giữa hai lần chạy job unlock |
@@ -218,6 +221,8 @@ Query `sent` / `inbox`: `page` (mặc định 0), `size` (mặc định 20, tố
 Chỉ `ROLE_ADMIN`. User thường → 403 `FORBIDDEN`. Trang vận hành: xem user/message/email unlock, **không** thay hộp thư người dùng. Admin **không** được sửa nội dung, đổi `unlockAt`, hay gọi `POST /messages/{id}/open` hộ người nhận.
 
 Content: admin chỉ thấy khi message `AVAILABLE` hoặc `OPENED`. `LOCKED` / `CANCELLED` trả metadata, không có field `content`.
+
+UI: [http://localhost:5173/admin](http://localhost:5173/admin) (cùng app frontend, route `/admin/*`). Swagger tag **Admin**.
 
 | Method | Path | Mô tả |
 | --- | --- | --- |

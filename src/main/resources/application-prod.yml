@@ -44,6 +44,8 @@ app:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
     display-name: ${ADMIN_DISPLAY_NAME:Admin}
+  dev-seed:
+    enabled: false
 
 springdoc:
   api-docs:

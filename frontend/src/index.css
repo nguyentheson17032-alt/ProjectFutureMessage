@@ -66,7 +66,8 @@ a:hover {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
@@ -331,7 +332,8 @@ textarea {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   border: 1px solid var(--line);
   background: rgba(7, 11, 20, 0.7);
@@ -747,6 +749,194 @@ textarea {
   opacity: 0.4;
 }
 
+.admin-page {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.admin-page .page-head {
+  margin-bottom: 0;
+}
+
+.admin-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-subnav a {
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+}
+
+.admin-subnav a.active {
+  color: var(--ink);
+  border-color: var(--gold);
+  background: rgba(215, 176, 122, 0.12);
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.stat-card {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--line);
+  background: rgba(16, 24, 38, 0.78);
+  padding: 1.1rem 1.15rem;
+  border-radius: 1.1rem;
+  color: var(--ink);
+}
+
+.stat-card:hover {
+  color: var(--ink);
+  border-color: var(--gold);
+}
+
+.stat-card strong {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.stat-label {
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stat-card.is-alert {
+  border-color: rgba(217, 122, 108, 0.55);
+}
+
+.stat-card.is-alert strong {
+  color: var(--danger);
+}
+
+.admin-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1.1rem;
+}
+
+.admin-filters label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.admin-filters .btn {
+  justify-self: start;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: rgba(16, 24, 38, 0.72);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.admin-table th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table tr.is-alert {
+  background: rgba(179, 59, 50, 0.16);
+}
+
+.admin-table .btn,
+.admin-table .btn.ghost {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+.table-actions {
+  text-align: right;
+}
+
+.admin-detail {
+  display: grid;
+  gap: 1.1rem;
+  max-width: 760px;
+}
+
+.admin-dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.admin-dl div {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  gap: 0.6rem;
+}
+
+.admin-dl dt {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.admin-dl dd {
+  margin: 0;
+}
+
+.notif-pending {
+  background: #2d3a52;
+  color: #d5deee;
+}
+
+.notif-sent {
+  background: #3e6b4d;
+  color: #e7f4ea;
+}
+
+.notif-failed {
+  background: var(--seal);
+  color: #fff;
+}
+
+.role-admin {
+  background: var(--gold);
+  color: #2a1c0e;
+}
+
+.role-user {
+  background: #2d3a52;
+  color: #d5deee;
+}
+
 @media (max-width: 800px) {
   .steps {
     grid-template-columns: 1fr;
@@ -759,5 +949,9 @@ textarea {
 
   .main {
     padding-inline: 1.1rem;
+  }
+
+  .admin-dl div {
+    grid-template-columns: 1fr;
   }
 }

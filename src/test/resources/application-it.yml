@@ -36,3 +36,5 @@ app:
   admin:
     email: ""
     password: ""
+  dev-seed:
+    enabled: false

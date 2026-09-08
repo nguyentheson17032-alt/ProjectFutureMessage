@@ -47,6 +47,50 @@ export type PageResponse<T> = {
   totalPages: number
 }
 
+export type AdminStats = {
+  totalUsers: number
+  messagesByStatus: {
+    locked: number
+    available: number
+    opened: number
+    cancelled: number
+  }
+  notifications: {
+    pending: number
+    sent: number
+    failed: number
+  }
+  unlockingWithin24Hours: number
+}
+
+export type AdminUserDetail = User & {
+  updatedAt: string
+  sentCount: number
+  inboxCount: number
+}
+
+export type AdminMessageSummary = {
+  id: string
+  senderId: string
+  senderEmail: string
+  senderDisplayName: string
+  recipientEmail: string
+  recipientUserId: string | null
+  recipientType: RecipientType
+  title: string
+  unlockAt: string
+  status: MessageStatus
+  openedAt: string | null
+  notificationStatus: NotificationStatus
+  notifiedAt: string | null
+  createdAt: string
+}
+
+export type AdminMessage = AdminMessageSummary & {
+  content?: string
+  updatedAt: string
+}
+
 export type FieldError = {
   field: string
   message: string
