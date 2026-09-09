@@ -7,28 +7,48 @@ type Props = {
   required?: boolean
   minLength?: number
   maxLength?: number
+  name?: string
+  id?: string
+  'aria-invalid'?: boolean
+  'aria-describedby'?: string
 }
 
-export function PasswordInput({ value, onChange, autoComplete, required, minLength, maxLength }: Props) {
+export function PasswordInput({
+  value,
+  onChange,
+  autoComplete,
+  required,
+  minLength,
+  maxLength,
+  name,
+  id,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
+}: Props) {
   const [visible, setVisible] = useState(false)
-  const id = useId()
+  const fallbackId = useId()
+  const inputId = id ?? fallbackId
 
   return (
     <div className="password-wrap">
       <input
-        id={id}
+        id={inputId}
+        name={name}
         type={visible ? 'text' : 'password'}
         autoComplete={autoComplete}
         required={required}
         minLength={minLength}
         maxLength={maxLength}
+        spellCheck={false}
         value={value}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
         onChange={(e) => onChange(e.target.value)}
       />
       <button
         type="button"
         className="eye-btn"
-        aria-controls={id}
+        aria-controls={inputId}
         aria-pressed={visible}
         aria-label={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
         title={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}

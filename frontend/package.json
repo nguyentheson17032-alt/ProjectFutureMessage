@@ -10,9 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.3"
+    "react": "^19.3.0-canary-6c0e1047-20260908",
+    "react-dom": "^19.3.0-canary-6c0e1047-20260908",
+    "react-router-dom": "^7.18.3",
+    "swr": "^2.5.1"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",

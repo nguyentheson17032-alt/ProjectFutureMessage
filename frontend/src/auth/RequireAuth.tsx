@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { PageState } from '../components/EmptyState'
 import { useAuth } from './AuthContext'
 import { homePath } from './paths'
 
@@ -8,11 +9,7 @@ export function RequireAuth() {
   const location = useLocation()
 
   if (!ready) {
-    return (
-      <div className="page-state">
-        <p>Đang mở phong bì phiên đăng nhập…</p>
-      </div>
-    )
+    return <PageState>Đang mở phiên đăng nhập…</PageState>
   }
 
   if (!user) {
@@ -24,7 +21,7 @@ export function RequireAuth() {
 
 export function GuestOnly({ children }: { children: ReactNode }) {
   const { user, ready } = useAuth()
-  if (!ready) return null
+  if (!ready) return <PageState>Đang mở phiên đăng nhập…</PageState>
   if (user) return <Navigate to={homePath(user)} replace />
   return children
 }

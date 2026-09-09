@@ -29,13 +29,17 @@ export function UnlockAtPicker({ value, onChange, error }: Props) {
 
   return (
     <div className="field">
-      <span className="field-label">Thời điểm mở</span>
-      <div className="unlock-picker">
+      <span className="field-label" id="unlock-at-label">
+        Thời điểm mở
+      </span>
+      <div className="unlock-picker" role="group" aria-labelledby="unlock-at-label">
         <label className="unlock-slot">
           <span>Ngày</span>
           <input
             type="date"
+            name="unlockDate"
             required
+            autoComplete="off"
             aria-label="Ngày mở"
             value={date}
             onChange={(e) => onChange(`${e.target.value}T${time || '09:00'}`)}
@@ -45,8 +49,10 @@ export function UnlockAtPicker({ value, onChange, error }: Props) {
           <span>Giờ</span>
           <input
             type="time"
+            name="unlockTime"
             required
             step={60}
+            autoComplete="off"
             aria-label="Giờ mở"
             value={time}
             onChange={(e) => onChange(`${date}T${e.target.value}`)}
@@ -60,7 +66,11 @@ export function UnlockAtPicker({ value, onChange, error }: Props) {
           </button>
         ))}
       </div>
-      {error ? <span className="field-error">{error}</span> : null}
+      {error ? (
+        <span className="field-error" role="alert">
+          {error}
+        </span>
+      ) : null}
       {!error && date && time ? (
         <span className="field-hint">
           Sẽ mở lúc {formatDateTime(localInputToIso(`${date}T${time}`))} (UTC+7). Nút nhanh đặt thời điểm từ bây giờ.

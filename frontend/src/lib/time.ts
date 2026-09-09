@@ -1,4 +1,14 @@
 const VN_TZ = 'Asia/Ho_Chi_Minh'
+const VN_DATE = new Intl.DateTimeFormat('vi-VN', {
+  timeZone: VN_TZ,
+  dateStyle: 'medium',
+  timeStyle: 'short',
+})
+const VN_DAY = new Intl.DateTimeFormat('vi-VN', {
+  timeZone: VN_TZ,
+  dateStyle: 'medium',
+})
+const VN_COUNT = new Intl.NumberFormat('vi-VN')
 
 function zonedParts(date: Date) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -39,18 +49,15 @@ export function localInputToIso(value: string): string {
 }
 
 export function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat('vi-VN', {
-    timeZone: VN_TZ,
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(iso))
+  return VN_DATE.format(new Date(iso))
 }
 
 export function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('vi-VN', {
-    timeZone: VN_TZ,
-    dateStyle: 'medium',
-  }).format(new Date(iso))
+  return VN_DAY.format(new Date(iso))
+}
+
+export function formatCount(value: number): string {
+  return VN_COUNT.format(value)
 }
 
 export function countdown(unlockAt: string): string {
@@ -62,7 +69,7 @@ export function countdown(unlockAt: string): string {
   const minutes = totalMinutes % 60
   if (days > 0) return `${days} ngày ${hours} giờ nữa`
   if (hours > 0) return `${hours} giờ ${minutes} phút nữa`
-  const seconds = Math.max(1, Math.floor(ms / 1000))
   if (minutes > 0) return `${minutes} phút nữa`
+  const seconds = Math.max(1, Math.floor(ms / 1000))
   return `${seconds} giây nữa`
 }

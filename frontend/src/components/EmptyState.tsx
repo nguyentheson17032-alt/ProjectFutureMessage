@@ -16,3 +16,7 @@ export function EmptyState({ title, body, action }: Props) {
     </div>
   )
 }
+
+export function PageState({ children }: { children: ReactNode }) {
+  return <p className="page-state">{children}</p>
+}

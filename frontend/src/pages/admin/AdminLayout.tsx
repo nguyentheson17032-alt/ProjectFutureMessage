@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
+import { TransitionNavLink } from '../../components/transitions'
 
 export function AdminLayout() {
   return (
@@ -8,16 +9,21 @@ export function AdminLayout() {
           <p className="eyebrow">Vận hành</p>
           <h1>Quản trị</h1>
           <p className="muted">
-            Theo dõi user, thư và email mở khóa. Không thay hộp thư người dùng — admin không mở thư hộ người nhận.
+            Theo dõi tài khoản, thư và email mở khóa. Không thay hộp thư người dùng: admin không mở
+            thư hộ người nhận.
           </p>
         </div>
       </header>
       <nav className="admin-subnav" aria-label="Mục quản trị">
-        <NavLink to="/admin" end>
+        <TransitionNavLink kind="lateral" to="/admin" end>
           Tổng quan
-        </NavLink>
-        <NavLink to="/admin/users">Người dùng</NavLink>
-        <NavLink to="/admin/messages">Tin nhắn</NavLink>
+        </TransitionNavLink>
+        <TransitionNavLink kind="lateral" to="/admin/users">
+          Người dùng
+        </TransitionNavLink>
+        <TransitionNavLink kind="lateral" to="/admin/messages">
+          Tin nhắn
+        </TransitionNavLink>
       </nav>
       <Outlet />
     </div>

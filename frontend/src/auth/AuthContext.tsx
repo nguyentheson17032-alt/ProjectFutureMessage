@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { mutate } from 'swr'
 import * as authApi from '../api/auth'
 import { persistSession, clearSession, getRefreshToken, getStoredUser } from './session'
 import type { User } from '../types'
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     clearSession()
     setUser(null)
+    await mutate(() => true, undefined, { revalidate: false })
   }, [])
 
   const value = useMemo(
@@ -79,11 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, ready, login, register, logout],
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext value={value}>{children}</AuthContext>
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext)
+  const ctx = use(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx
 }

@@ -1,37 +1,90 @@
 import type { AuthResponse, User } from '../types'
 
-const ACCESS_KEY = 'fm.accessToken'
-const REFRESH_KEY = 'fm.refreshToken'
-const USER_KEY = 'fm.user'
+const SESSION_KEY = 'fm.session.v1'
+const LEGACY_ACCESS = 'fm.accessToken'
+const LEGACY_REFRESH = 'fm.refreshToken'
+const LEGACY_USER = 'fm.user'
 
-export function getAccessToken(): string | null {
-  return localStorage.getItem(ACCESS_KEY)
+type SessionV1 = {
+  v: 1
+  accessToken: string
+  refreshToken: string
+  user: User
 }
 
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_KEY)
-}
+let memory: SessionV1 | null | undefined
 
-export function getStoredUser(): User | null {
-  const raw = localStorage.getItem(USER_KEY)
-  if (!raw) return null
+function readRaw(): string | null {
   try {
-    return JSON.parse(raw) as User
+    return localStorage.getItem(SESSION_KEY)
   } catch {
     return null
   }
 }
 
+function migrateLegacy(): SessionV1 | null {
+  try {
+    const accessToken = localStorage.getItem(LEGACY_ACCESS)
+    const refreshToken = localStorage.getItem(LEGACY_REFRESH)
+    const rawUser = localStorage.getItem(LEGACY_USER)
+    if (!accessToken || !refreshToken || !rawUser) return null
+    const user = JSON.parse(rawUser) as User
+    const session: SessionV1 = { v: 1, accessToken, refreshToken, user }
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    localStorage.removeItem(LEGACY_ACCESS)
+    localStorage.removeItem(LEGACY_REFRESH)
+    localStorage.removeItem(LEGACY_USER)
+    return session
+  } catch {
+    return null
+  }
+}
+
+function readSession(): SessionV1 | null {
+  if (memory !== undefined) return memory
+  const raw = readRaw()
+  if (!raw) {
+    memory = migrateLegacy()
+    return memory
+  }
+  try {
+    const parsed = JSON.parse(raw) as SessionV1
+    memory = parsed?.v === 1 ? parsed : null
+  } catch {
+    memory = null
+  }
+  return memory
+}
+
+export function getAccessToken(): string | null {
+  return readSession()?.accessToken ?? null
+}
+
+export function getRefreshToken(): string | null {
+  return readSession()?.refreshToken ?? null
+}
+
+export function getStoredUser(): User | null {
+  return readSession()?.user ?? null
+}
+
 export function persistSession(auth: AuthResponse): void {
-  localStorage.setItem(ACCESS_KEY, auth.accessToken)
-  localStorage.setItem(REFRESH_KEY, auth.refreshToken)
-  localStorage.setItem(USER_KEY, JSON.stringify(auth.user))
+  const session: SessionV1 = {
+    v: 1,
+    accessToken: auth.accessToken,
+    refreshToken: auth.refreshToken,
+    user: auth.user,
+  }
+  memory = session
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   window.dispatchEvent(new Event('fm:session'))
 }
 
 export function clearSession(): void {
-  localStorage.removeItem(ACCESS_KEY)
-  localStorage.removeItem(REFRESH_KEY)
-  localStorage.removeItem(USER_KEY)
+  memory = null
+  localStorage.removeItem(SESSION_KEY)
+  localStorage.removeItem(LEGACY_ACCESS)
+  localStorage.removeItem(LEGACY_REFRESH)
+  localStorage.removeItem(LEGACY_USER)
   window.dispatchEvent(new Event('fm:logout'))
 }
